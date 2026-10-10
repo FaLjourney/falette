@@ -37,5 +37,19 @@ export default defineConfig(
 		// Override or add rule settings here, such as:
 		// 'svelte/button-has-type': 'error'
 		rules: {}
+	},
+	{
+		// All randomness in the engine and patterns comes from the seeded PRNG (ENG-02).
+		files: ['src/lib/engine/**', 'src/lib/patterns/**'],
+		rules: {
+			'no-restricted-properties': [
+				'error',
+				{
+					object: 'Math',
+					property: 'random',
+					message: 'Use the seeded PRNG from src/lib/engine/prng.ts (ENG-02).'
+				}
+			]
+		}
 	}
 );
