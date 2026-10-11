@@ -1,9 +1,7 @@
 import { el } from '../../src/lib/engine/svg';
 import type { PatternModule } from '../../src/lib/engine/types';
 
-const COLORS = ['e07a5f', '3d405b', '81b29a'];
-
-/** Test-only pattern with fixed colors, exercising a number and a choice parameter. */
+/** Test-only pattern exercising a number and a choice parameter. */
 export const mockPattern: PatternModule = {
 	id: 'mock',
 	name: 'Mock',
@@ -12,14 +10,15 @@ export const mockPattern: PatternModule = {
 		count: { type: 'number', min: 3, max: 12, step: 1, default: 5 },
 		mode: { type: 'choice', options: ['scatter', 'rings'], default: 'rings' }
 	},
-	generate({ width, height, params, rng }) {
+	colorCount: (params) => Number(params.count),
+	generate({ width, height, params, rng, background, colors }) {
 		const count = Number(params.count);
 		const short = Math.min(width, height);
 		const cx = width * (0.25 + rng() * 0.5);
 		const cy = height * (0.25 + rng() * 0.5);
-		let out = el('rect', { width, height, fill: '#f4efe6' });
+		let out = el('rect', { width, height, fill: background });
 		for (let i = 0; i < count; i++) {
-			const fill = `#${COLORS[i % COLORS.length]}`;
+			const fill = colors[i];
 			if (params.mode === 'rings') {
 				const r = short * (0.5 - (i / count) * 0.45);
 				out += el('circle', { cx, cy, r, fill });

@@ -63,6 +63,29 @@ describe('render (ENG-01)', () => {
 		);
 	});
 
+	it('keeps the same composition in both variants, only colors differ (MODE-01)', () => {
+		const mask = (svg: string) => svg.replace(/#[0-9a-f]{6}/g, '#color');
+		for (const mode of ['rings', 'scatter']) {
+			const light = render(config({ params: { mode }, variant: 'light' }), mockPattern);
+			const dark = render(config({ params: { mode }, variant: 'dark' }), mockPattern);
+			expect(dark).not.toBe(light);
+			expect(mask(dark)).toBe(mask(light));
+		}
+	});
+
+	it('passes the resolved palette colors to the pattern', () => {
+		const svg = render(
+			config({
+				palette: ['e07a5f', '3d405b', '81b29a'],
+				background: 'f4efe6',
+				params: { count: 3 }
+			}),
+			mockPattern
+		);
+		expect(svg).toContain('fill="#f4efe6"');
+		for (const color of ['#e07a5f', '#3d405b', '#81b29a']) expect(svg).toContain(`fill="${color}"`);
+	});
+
 	it('rejects a pattern module that does not match the config', () => {
 		expect(() => render(config({ pattern: 'arcs' }), mockPattern)).toThrow();
 	});

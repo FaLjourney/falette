@@ -64,6 +64,10 @@ export interface GenerateContext {
 	params: Params;
 	/** Seeded random source in [0, 1) (ENG-02). */
 	rng: () => number;
+	/** Background of this variant as `#rrggbb`. */
+	background: string;
+	/** Pattern colors of this variant as `#rrggbb`, exactly `colorCount(params)` of them. */
+	colors: readonly string[];
 }
 
 /** One pattern module (ENG-03). */
@@ -72,6 +76,8 @@ export interface PatternModule {
 	name: string;
 	category: Category;
 	params: ParamSchema;
+	/** How many pattern colors `generate()` uses for these params (ENG-11). */
+	colorCount(params: Params): number;
 	/** Returns the SVG elements that go inside the root `<svg>`. */
 	generate(ctx: GenerateContext): string;
 }
