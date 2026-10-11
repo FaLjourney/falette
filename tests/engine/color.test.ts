@@ -7,6 +7,7 @@ import {
 	inGamut,
 	mixOklch,
 	oklabToHex,
+	oklabToOklch,
 	oklchToHex,
 	oklchToOklab
 } from '../../src/lib/engine/color';
@@ -139,6 +140,20 @@ describe('OKLCH helpers', () => {
 		expect(((Math.atan2(mid.b, mid.a) * 180) / Math.PI + 360) % 360).toBeCloseTo(10, 9);
 		expect(deltaEOK(mixOklch(p, q, 0), p)).toBeLessThan(1e-12);
 		expect(deltaEOK(mixOklch(p, q, 1), q)).toBeLessThan(1e-12);
+	});
+
+	it('interpolates normally when both endpoints are near grey', () => {
+		const warm = hexToOklab('f6eee2');
+		const cool = hexToOklab('e4eef6');
+		expect(deltaEOK(mixOklch(warm, cool, 0), warm)).toBeLessThan(1e-12);
+		expect(deltaEOK(mixOklch(warm, cool, 1), cool)).toBeLessThan(1e-12);
+		const steps = [0, 0.25, 0.5, 0.75, 1].map((t) => mixOklch(warm, cool, t));
+		const gaps = steps.slice(1).map((step, i) => deltaEOK(steps[i], step));
+		expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(0.005);
+	});
+
+	it('keeps hue in [0, 360)', () => {
+		expect(oklabToOklch({ L: 0.5, a: 0.1, b: -1e-18 }).h).toBe(0);
 	});
 
 	it('gives a near-grey endpoint the hue of the other endpoint', () => {

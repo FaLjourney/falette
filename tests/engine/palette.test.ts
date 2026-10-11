@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hexToOklab, hexToOklch } from '../../src/lib/engine/color';
+import { hexToOklch } from '../../src/lib/engine/color';
 import {
 	BG_AUTO_C,
 	BG_DARK_L,
@@ -15,7 +15,6 @@ const APPENDIX_B = ['e07a5f', '3d405b', '81b29a'];
 const FIVE = ['e07a5f', '3d405b', '81b29a', 'f2cc8f', '2a78d6'];
 
 const lch = (color: string) => hexToOklch(color.replace('#', ''));
-const lab = (color: string) => hexToOklab(color.replace('#', ''));
 
 function randomPalette(rng: () => number): string[] {
 	const size = 1 + Math.floor(rng() * 5);
@@ -101,6 +100,15 @@ describe('background (COL-05)', () => {
 		expect(resolveColors(APPENDIX_B, 'auto', 'dark', 3).background).toBe('#1d1311');
 	});
 
+	it('Auto never makes the tint stronger than a pale first slot', () => {
+		for (const first of ['f4efe6', 'f7f7f5']) {
+			for (const variant of ['light', 'dark'] as const) {
+				const bg = resolveColors([first, 'e07a5f'], 'auto', variant, 2).background;
+				expect(lch(bg).c).toBeLessThanOrEqual(lch(`#${first}`).c + 0.003);
+			}
+		}
+	});
+
 	it('Auto stays neutral when the first slot is grey', () => {
 		for (const variant of ['light', 'dark'] as const) {
 			const hex = resolveColors(['808080', 'e07a5f'], 'auto', variant, 2).background;
@@ -118,6 +126,9 @@ describe('background (COL-05)', () => {
 		expect(out.l).toBeCloseTo(BG_LIGHT_L, 2);
 		expect(Math.abs(out.h - pick.h)).toBeLessThan(2);
 		expect(out.c).toBeLessThanOrEqual(pick.c);
+		// Chroma above BG_AUTO_C comes through (up to the gamut), unlike Auto.
+		expect(resolveColors(APPENDIX_B, '2a78d6', 'dark', 3).background).toBe('#001533');
+		expect(resolveColors(APPENDIX_B, 'f2cc8f', 'light', 3).background).toBe('#ffedd2');
 	});
 });
 
@@ -145,6 +156,9 @@ describe('dark variant (MODE-02)', () => {
 				const l = lch(light.colors[j]);
 				expect(d.l - bgL).toBeGreaterThanOrEqual(MIN_DL - 0.005);
 				expect(d.c).toBeLessThanOrEqual(l.c * DARK_CHROMA + 0.003);
+				if (l.c > 0.05 && d.c > 0.03) {
+					expect(Math.abs(((d.h - l.h + 540) % 360) - 180)).toBeLessThan(5);
+				}
 				const lightDistance = BG_LIGHT_L - l.l;
 				if (lightDistance >= MIN_DL && lightDistance <= 1 - BG_DARK_L) {
 					expect(Math.abs(d.l - bgL - lightDistance)).toBeLessThan(0.01);
@@ -186,9 +200,10 @@ describe('too-similar flag (COL-05)', () => {
 	});
 
 	it('measures similarity in OKLab on the written colors', () => {
-		const { background, colors } = resolveColors(['f8cab8'], 'fbe1d6', 'light', 1);
-		const [l1, l2] = [lab(background), lab(colors[0])];
-		expect(Math.hypot(l1.L - l2.L, l1.a - l2.a, l1.b - l2.b)).toBeLessThan(SIMILAR_DE);
+		// Nearly the same lightness, but chroma keeps them apart.
+		expect(resolveColors(['ffff00'], 'auto', 'light', 1).tooSimilar).toBe(false);
+		// Only the gamut-mapped, rounded background is close enough to flag.
+		expect(resolveColors(['feddc6'], 'e17882', 'light', 1).tooSimilar).toBe(true);
 	});
 });
 

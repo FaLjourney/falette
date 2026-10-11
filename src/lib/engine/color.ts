@@ -101,7 +101,7 @@ export function oklabToHex(lab: Oklab): string {
 
 export function oklabToOklch({ L, a, b }: Oklab): Oklch {
 	const h = (Math.atan2(b, a) * 180) / Math.PI;
-	return { l: L, c: Math.sqrt(a * a + b * b), h: h < 0 ? h + 360 : h };
+	return { l: L, c: Math.sqrt(a * a + b * b), h: (h + 360) % 360 };
 }
 
 export function oklchToOklab({ l, c, h }: Oklch): Oklab {
@@ -124,15 +124,15 @@ export function deltaEOK(p: Oklab, q: Oklab): number {
 
 /**
  * Interpolates in OKLCH: lightness and chroma linearly, hue along the shorter
- * arc. A near-achromatic endpoint takes the other endpoint's hue.
+ * arc. A near-achromatic endpoint takes the other endpoint's hue, unless both are.
  */
 export function mixOklch(p: Oklab, q: Oklab, t: number): Oklab {
 	const c1 = Math.sqrt(p.a * p.a + p.b * p.b);
 	const c2 = Math.sqrt(q.a * q.a + q.b * q.b);
 	let h1 = Math.atan2(p.b, p.a);
 	let h2 = Math.atan2(q.b, q.a);
-	if (c1 < ACHROMATIC_C) h1 = h2;
-	if (c2 < ACHROMATIC_C) h2 = h1;
+	if (c1 < ACHROMATIC_C && c2 >= ACHROMATIC_C) h1 = h2;
+	else if (c2 < ACHROMATIC_C && c1 >= ACHROMATIC_C) h2 = h1;
 	let dh = h2 - h1;
 	if (dh > Math.PI) dh -= 2 * Math.PI;
 	else if (dh <= -Math.PI) dh += 2 * Math.PI;
