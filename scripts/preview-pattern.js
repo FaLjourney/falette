@@ -7,7 +7,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { runnerImport } from 'vite';
 
-const id = process.argv[2] ?? 'arcs';
+const id = process.argv[2];
+if (id === undefined) {
+	process.stderr.write('Usage: npm run preview:pattern -- <pattern-id>\n');
+	process.exit(1);
+}
 const seed = '42';
 const palette = ['e07a5f', '3d405b', '81b29a'];
 const background = 'f4efe6';
