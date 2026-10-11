@@ -53,9 +53,10 @@ function archUnit(width: number, height: number): number {
 }
 
 /**
- * One arch whose circles share a centre `depth` below the bottom edge. `ratio` is the outer
- * arc's height / half-width; sqrt(height · half-width) stays `size`, so a flatter arch gets
- * lower as it gets wider. Returns the apex height above the bottom edge and the depth.
+ * One arch whose circle centres lie `depth` below the bottom edge (lean then shifts the inner
+ * centres sideways). `ratio` is the outer arc's height / half-width; sqrt(height · half-width)
+ * stays `size`, so a flatter arch gets lower as it gets wider. Returns the apex height above the
+ * bottom edge and the depth.
  */
 function arch(size: number, ratio: number): { apex: number; depth: number } {
 	const apex = size * Math.sqrt(ratio);
@@ -128,7 +129,9 @@ export function layout(width: number, height: number, params: Params, rng: () =>
  * The part of a disc inside the canvas as a closed path: an arc over the top, cut by the bottom
  * edge and, where the disc reaches past them, by the side edges. Nothing is drawn outside the
  * viewBox, so editors show exactly what browsers show (ENG-01). The centre sits on or below the
- * bottom edge and the apex below the top edge, so the arc never spans more than a half circle.
+ * bottom edge and the apex below the top edge, so the visible arc is at most a half circle. When
+ * the apex is on the canvas the arc is split there: a single arc between rounded endpoints of a
+ * near-diameter chord would let renderers place its centre several pixels off.
  * Returns '' when the disc lies entirely beside the canvas.
  */
 function discPath({ cx, cy, r }: Disc, width: number, height: number): string {
@@ -141,11 +144,12 @@ function discPath({ cx, cy, r }: Disc, width: number, height: number): string {
 	const bottom = num(height);
 	const start = left >= 0 ? `M${num(left)} ${bottom}` : `M0 ${bottom}L0 ${num(edgeY(0))}`;
 	const arc = `A${num(r)} ${num(r)} 0 0 1`;
+	const apex = cx > 0 && cx < width ? `${arc} ${num(cx)} ${num(cy - r)}` : '';
 	const end =
 		right <= width
 			? `${arc} ${num(right)} ${bottom}`
 			: `${arc} ${num(width)} ${num(edgeY(width))}L${num(width)} ${bottom}`;
-	return `${start}${end}Z`;
+	return `${start}${apex}${end}Z`;
 }
 
 /** Stacked minimalist arcs standing on the bottom edge (catalog #15a). */
