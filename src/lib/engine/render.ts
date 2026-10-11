@@ -1,3 +1,4 @@
+import { resolveColors } from './palette';
 import { createRng } from './prng';
 import { el, num } from './svg';
 import type { Params, PatternModule, RenderConfig } from './types';
@@ -23,11 +24,20 @@ export function render(config: RenderConfig, pattern: PatternModule): string {
 		);
 	}
 	const { width, height } = config.size;
+	const params = withDefaults(pattern, config.params);
+	const { background, colors } = resolveColors(
+		config.palette,
+		config.background,
+		config.variant,
+		pattern.colorCount(params)
+	);
 	const body = pattern.generate({
 		width,
 		height,
-		params: withDefaults(pattern, config.params),
-		rng: createRng(config.seed)
+		params,
+		rng: createRng(config.seed),
+		background,
+		colors
 	});
 	return el(
 		'svg',
