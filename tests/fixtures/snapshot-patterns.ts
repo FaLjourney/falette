@@ -5,7 +5,7 @@ import { mockPattern } from './mock-pattern';
 /** Patterns covered by the ENG-08 snapshot test. */
 export const snapshotPatterns: PatternModule[] = [mockPattern, arcs];
 
-/** Fixed seeds: numeric and word seeds take the same text-hash path. */
+/** Fixed seeds shared by all patterns: numeric and word seeds take the same text-hash path. */
 export const snapshotSeeds = ['1', '42', 'senja-teduh-42'];
 
 /** A fixed seed with param overrides; params left out use their schema defaults. */
@@ -13,6 +13,10 @@ export interface SnapshotCase {
 	seed: string;
 	params: Params;
 }
+
+/** Extra cases run on one phone and one laptop preset, light variant only. */
+export const snapshotExtraPresets = ['ios-63', 'mba-13'];
+export const snapshotExtraVariants: Variant[] = ['light'];
 
 /** Extra cases per pattern ID, for branches the shared seeds at default params never reach. */
 export const snapshotExtraCases: Record<string, SnapshotCase[]> = {
@@ -30,7 +34,7 @@ export const snapshotExtraCases: Record<string, SnapshotCase[]> = {
 	]
 };
 
-/** Both wallpaper variants are checked for every case (PAT-10). */
+/** The shared seeds run on every representative preset in both variants (PAT-10). */
 export const snapshotVariants: Variant[] = ['light', 'dark'];
 
 /** Palette and background from the PRD Appendix B example link. */
