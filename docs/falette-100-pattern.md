@@ -15,6 +15,7 @@ Daftar pola generatif Falette, disusun dari daftar awal 100 pola supaya bisa dik
 - **Modul**: satu modul per pola berisi `id`, nama, kategori, skema parameter, dan `generate()` (ENG-03). Daftar ringan (ID, nama, kategori) dimuat di awal, sedangkan modulnya baru dimuat saat thumbnail-nya mulai terlihat atau saat dipilih (ENG-10).
 - **Parameter**: 2–4 per pola (PAT-02). Kunci dan nilai pilihannya berbahasa Inggris karena ikut tersimpan di link sebagai `x`, misalnya `layers:5` atau `mode:rings`; label di panel tetap diterjemahkan. Rentang 0–1 berarti nilai yang dinormalisasi terhadap ukuran layar atau intensitas, supaya hasilnya serupa di semua preset. Nilai awal juga dipakai bila link tidak memuat parameter itu (Lampiran B PRD), jadi jangan diubah setelah pola rilis tanpa menaikkan versi engine (SHR-03).
 - **Geometri**: koordinat relatif terhadap ukuran kanvas dan menyesuaikan rasio potret, lanskap, atau ultrawide (ENG-04).
+- **Potret**: di kanvas potret, bentuk utama pola Lanskap menempati minimal 30% tinggi kanvas di semua seed dan parameter (DEV-05).
 - **Acak**: hanya lewat PRNG ber-seed (ENG-02), tanpa `Math.random()`. Tombol Acak hanya mengganti seed (PAT-04), jadi seed harus mengubah komposisi secara terlihat, bukan hanya detail kecil.
 - **Warna**: memakai palet 1–5 warna pola dan Latar dari COL-05, dihitung di OKLCH (ENG-05). Bila pola butuh lebih banyak warna, kekurangannya diisi gradasi OKLCH (ENG-11). Bila palet berisi lebih banyak warna daripada kebutuhan pola, pola memakai warna berurutan mulai dari slot pertama.
 - **Filter**: tanpa filter SVG berat (ENG-06). Efek lembut seperti blur ditiru dengan `radialGradient` atau `linearGradient` yang memudar ke transparan.
@@ -76,7 +77,7 @@ Set pamer Home (HOME-04) di MVP memakai keempat pola MVP.
 | No | ID | Pola | Kategori | Render | Parameter | Penjelasan | Catatan |
 |---|---|---|---|---|---|---|---|
 | 15a | `arcs` | ✅ Arcs | Lanskap | SVG | `layers` 3–12 (5) · `curve` 0–1 (0.6) · `focus` 0–1 (0.5) | Busur lengkung bertumpuk dengan gaya minimalis. | Dipecah dari #15. Nilai awal sama dengan contoh di Lampiran B PRD. |
-| 15b | `hills` | Hills | Lanskap | SVG | `layers` 3–10 (5) · `height` 0–1 (0.5) · `softness` 0–1 (0.6) | Bukit lengkung bertumpuk dengan gaya minimalis. | Dipecah dari #15. |
+| 15b | `hills` | ✅ Hills | Lanskap | SVG | `layers` 3–10 (5) · `height` 0–1 (0.5) · `softness` 0–1 (0.6) | Bukit lengkung bertumpuk dengan gaya minimalis. | Dipecah dari #15. |
 | 1 | `waves` | Waves (Layered waves) | Lanskap | SVG | `layers` 3–12 (6) · `amplitude` 0–1 (0.4) · `frequency` 1–6 (2) | Beberapa lapis gelombang bertumpuk dengan warna bergradasi dari depan ke belakang. | Nama di aplikasi: Waves. |
 | 2 | `gradient` | Gradient (linear dan radial) | Gradasi | SVG | `type` linear/radial (linear) · `angle` 0–360 (135) · `spread` 0–1 (0.5) | Peralihan halus antarwarna, lurus ke satu arah atau memancar dari satu titik pusat. | Seed mengatur sebaran titik warna dan, untuk radial, letak pusatnya, agar Acak tetap menghasilkan variasi yang terlihat (PAT-10). |
 
