@@ -61,7 +61,7 @@ Urutan awal Fase 1a:
 - Menambah library, font, ikon, atau skrip pihak ketiga tanpa izin (NFR Keamanan, NFR Performa).
 - Mengarang API atau opsi library. Cek dokumentasi versi yang terpasang.
 - Mengubah, melewati (`.skip`), atau menghapus tes supaya lulus. Bila tes gagal, perbaiki kodenya atau laporkan.
-- Memperbarui snapshot (ENG-08) tanpa alasan. Perubahan hasil engine wajib menaikkan versi `v` (SHR-03).
+- Memperbarui snapshot (ENG-08) tanpa alasan. Setelah rilis publik, perubahan hasil engine wajib menaikkan versi `v` (SHR-03); sebelum rilis, versi tetap 1.
 - Meninggalkan kode mati, kode yang dikomentari, `console.log`, tipe `any`, atau TODO yang tidak disebut di laporan.
 - Mengubah PRD, katalog, atau file ini tanpa diminta.
 

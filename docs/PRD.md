@@ -435,7 +435,7 @@ Preset awal mencakup 28 ukuran dalam empat kategori; resolusi model diambil dari
 
 Baris "Kelas umum" adalah resolusi standar yang lazim, bukan model tertentu; uji dengan device nyata sebelum rilis. Perangkat lipat seperti [iPhone Duo](https://www.apple.com/iphone-duo/specs/) punya layar luar 1398 × 2034 dan layar dalam 1878 × 2670, sehingga butuh dua preset (DEV-08). Preset baru hanya dibuat untuk resolusi baru; model baru dengan resolusi yang sama cukup ditambahkan ke kolom Contoh model di data JSON beserta tautan sumbernya (DEV-02). Daftar ditinjau tiap ada peluncuran perangkat besar, dan permintaan pengguna masuk lewat issue di repositori.
 
-Overlay jam memakai 5 templat menurut OS: iPhone (`ios-*`), Android (`and-*` dan `tab-wqxga`), iPad (`ipad-*`), Mac (`mbp-*` dan `mba-*`), serta desktop umum (`lap-*` dan `desk-*`). Pemeriksaan visual tiap pola memakai 6 preset perwakilan: `and-fhd20` (paling tinggi), `ios-63` (paling umum), `ipad-pro-13` (paling mendekati persegi), `mba-13`, `desk-uw` (paling lebar), dan `desk-5k` (piksel terbanyak); uji otomatis tetap jalan di semua preset.
+Overlay jam memakai 5 templat menurut OS: iPhone (`ios-*`), Android (`and-*` dan `tab-wqxga`), iPad (`ipad-*`), Mac (`mbp-*` dan `mba-*`), serta desktop umum (`lap-*` dan `desk-*`). Pemeriksaan visual tiap pola memakai 6 preset perwakilan: `and-fhd20` (20:9, termasuk yang paling tinggi), `ios-63` (paling umum), `ipad-pro-13` (paling mendekati persegi), `mba-13`, `desk-uw` (paling lebar), dan `desk-5k` (piksel terbanyak); uji otomatis tetap jalan di semua preset.
 
 ## Lampiran B. Skema konfigurasi URL
 
