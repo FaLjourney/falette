@@ -114,8 +114,8 @@ function shape(size: Size, seed: string, params: Params = {}): Layout {
 
 /** The drawn curve of every wave, back first, at the given params. */
 function curves(size: Size, seed: string, params: Params = {}): Segment[][] {
-	const all = shape(size, seed, params);
-	return all.waves.map((wave) => curve(all, wave, size.width));
+	const geometry = shape(size, seed, params);
+	return geometry.waves.map((wave) => curve(geometry, wave, size.width));
 }
 
 /** Highest point of a drawn wave, control points included: the curve stays below it. */
@@ -151,7 +151,8 @@ function heightAt(segments: Segment[], x: number): number {
 }
 
 /**
- * Points below `low` on the back wave or above `high` on any wave, as shares of the height.
+ * Points below `low` (a share of the height) on the back wave or above `high(size)` (in pixels)
+ * on any wave.
  * Checks every start, control and end point: a Bézier curve lies within their heights.
  */
 function outOfRange(
@@ -370,7 +371,7 @@ describe('waves: proportions (ENG-04, DEV-05)', () => {
 					const double = { width: size.width * 2, height: size.height * 2 };
 					const one = shape(size, seed, params);
 					expect(shape(double, seed, params)).toEqual({
-						length: one.length * 2,
+						wavelength: one.wavelength * 2,
 						waves: one.waves.map((w) => ({ ...w, mid: w.mid * 2, amp: w.amp * 2 }))
 					});
 					const drawn = curves(size, seed, params).map((c) =>
@@ -387,18 +388,20 @@ describe('waves: proportions (ENG-04, DEV-05)', () => {
 		for (let frequency = 1; frequency <= 6; frequency++) {
 			for (const size of [...appendixA, ...landscapes]) {
 				// The limit never binds on a preset, a tablet on its side or a 32:9 span.
-				const { length } = shape(size, '42', { frequency });
-				expect(length).toBe(Math.min(size.width, size.height) / frequency);
+				const { wavelength } = shape(size, '42', { frequency });
+				expect(wavelength).toBe(Math.min(size.width, size.height) / frequency);
 			}
 			for (const size of [...sizes, ...portraitCustoms]) {
-				const { length } = shape(size, '42', { frequency });
-				expect(size.width / length).toBeLessThanOrEqual(48 * (1 + 1e-12));
+				const { wavelength } = shape(size, '42', { frequency });
+				expect(size.width / wavelength).toBeLessThanOrEqual(48 * (1 + 1e-12));
 			}
 		}
 		// The 24:1 strip fits 24 waves at frequency 1, and 48 from frequency 2.
 		const strip = { width: 7680, height: 320 };
-		expect(shape(strip, '42', { frequency: 1 }).length).toBe(320);
-		for (const frequency of [2, 3, 6]) expect(shape(strip, '42', { frequency }).length).toBe(160);
+		expect(shape(strip, '42', { frequency: 1 }).wavelength).toBe(320);
+		for (const frequency of [2, 3, 6]) {
+			expect(shape(strip, '42', { frequency }).wavelength).toBe(160);
+		}
 	});
 
 	it('adds waves on wider screens instead of stretching them, keeping the centre', () => {
@@ -429,12 +432,12 @@ describe('waves: proportions (ENG-04, DEV-05)', () => {
 		for (const seed of seeds(10)) {
 			for (const size of [...presets, ...customs]) {
 				for (const params of extremes) {
-					const { length } = shape(size, seed, params);
+					const { wavelength } = shape(size, seed, params);
 					for (const segments of curves(size, seed, params)) {
 						for (let j = 1; j + 4 < segments.length - 1; j++) {
 							for (let k = 0; k < 4; k++) {
 								const [point, next] = [segments[j][k], segments[j + 4][k]];
-								shift = Math.max(shift, Math.abs(next.x - point.x - length) / size.width);
+								shift = Math.max(shift, Math.abs(next.x - point.x - wavelength) / size.width);
 								rise = Math.max(rise, Math.abs(next.h - point.h) / size.height);
 							}
 						}
@@ -474,8 +477,8 @@ describe('waves: proportions (ENG-04, DEV-05)', () => {
 			const clearance = 0.02 * Math.min(size.width, size.height);
 			for (const seed of seeds(100)) {
 				for (const params of floorParams) {
-					const all = shape(size, seed, params);
-					const front = curve(all, all.waves[all.waves.length - 1], size.width);
+					const geometry = shape(size, seed, params);
+					const front = curve(geometry, geometry.waves[geometry.waves.length - 1], size.width);
 					const lowest = Math.min(...front.flatMap((segment) => segment.map(({ h }) => h)));
 					if (lowest < clearance) {
 						wrong.push(
@@ -496,10 +499,10 @@ describe('waves: parameters', () => {
 				const base = shape(size, seed, { layers: 3 });
 				const drawn = curves(size, seed, { layers: 3 });
 				for (let layers = 4; layers <= 12; layers++) {
-					const all = shape(size, seed, { layers });
-					expect(all.waves).toHaveLength(layers);
-					expect(all.waves[0]).toEqual(base.waves[0]);
-					expect({ ...all.waves[layers - 1], band: 2 }).toEqual(base.waves[2]);
+					const geometry = shape(size, seed, { layers });
+					expect(geometry.waves).toHaveLength(layers);
+					expect(geometry.waves[0]).toEqual(base.waves[0]);
+					expect({ ...geometry.waves[layers - 1], band: 2 }).toEqual(base.waves[2]);
 					const lines = curves(size, seed, { layers });
 					expect(lines[0]).toEqual(drawn[0]);
 					expect(lines[layers - 1]).toEqual(drawn[2]);
@@ -508,16 +511,18 @@ describe('waves: parameters', () => {
 		}
 	});
 
-	it('amplitude grows every wave from a 3% to an 18% swell of the shorter side and moves nothing sideways', () => {
+	it('amplitude grows every wave, the front one evenly from a 3% to an 18% swell of the shorter side, and moves nothing sideways', () => {
 		for (const seed of seeds(20)) {
 			for (const size of [...presets, ...customs]) {
 				const unit = Math.min(size.width, size.height);
 				const swell = (amplitude: number) => {
-					const all = shape(size, seed, { amplitude }).waves;
-					return (2 * all[all.length - 1].amp) / unit;
+					const list = shape(size, seed, { amplitude }).waves;
+					return (2 * list[list.length - 1].amp) / unit;
 				};
-				expect(swell(0)).toBeCloseTo(0.03, 12);
-				expect(swell(1)).toBeCloseTo(0.18, 12);
+				// 3% at 0, 9% at the default 0.4 and 18% at 1, in even steps.
+				for (let step = 0; step <= 20; step++) {
+					expect(swell(step / 20)).toBeCloseTo(0.03 + (0.15 * step) / 20, 12);
+				}
 				const xs = (amplitude: number) =>
 					curves(size, seed, { amplitude }).map((c) => c.map((s) => s.map((p) => p.x)));
 				const reference = xs(0);
@@ -556,10 +561,10 @@ describe('waves: parameters', () => {
 		for (const seed of seeds(10)) {
 			for (const size of [...presets, ...customs]) {
 				for (const params of extremes) {
-					const all = shape(size, seed, params);
-					for (const wave of all.waves) {
-						for (const [p0, p1, p2, p3] of curve(all, wave, size.width)) {
-							narrowest = Math.min(narrowest, (p3.x - p0.x) / all.length);
+					const geometry = shape(size, seed, params);
+					for (const wave of geometry.waves) {
+						for (const [p0, p1, p2, p3] of curve(geometry, wave, size.width)) {
+							narrowest = Math.min(narrowest, (p3.x - p0.x) / geometry.wavelength);
 							const [low, high] = [Math.min(p0.h, p3.h), Math.max(p0.h, p3.h)];
 							for (const { h } of [p1, p2]) {
 								outside = Math.max(outside, (low - h) / size.height, (h - high) / size.height);
@@ -571,7 +576,7 @@ describe('waves: parameters', () => {
 									3 * u * u * t * p1[key] +
 									3 * u * t * t * p2[key] +
 									t ** 3 * p3[key];
-								const tau = (at('x') - size.width / 2) / all.length + wave.phase;
+								const tau = (at('x') - size.width / 2) / geometry.wavelength + wave.phase;
 								const exact = wave.mid + wave.amp * profile(tau);
 								error = Math.max(error, Math.abs(at('h') - exact) / (2 * wave.amp));
 							}
@@ -614,11 +619,11 @@ describe('waves: parameters', () => {
 		(_, size) => {
 			const cols = 400;
 			for (const seed of seeds(30)) {
-				const all = curves(size, seed);
-				const seen = new Array<number>(all.length).fill(0);
+				const drawn = curves(size, seed);
+				const seen = new Array<number>(drawn.length).fill(0);
 				let total = 0;
 				for (let c = 0; c < cols; c++) {
-					const heights = all.map((segments) =>
+					const heights = drawn.map((segments) =>
 						heightAt(segments, ((c + 0.5) * size.width) / cols)
 					);
 					let above = 0;
@@ -680,11 +685,11 @@ describe('waves: seed variation (PAT-04, PAT-10)', () => {
 		'moves every seed axis both ways on %s',
 		(_, size) => {
 			const traits = seeds(30).map((seed) => {
-				const all = shape(size, seed).waves;
-				const [back, front] = [all[0], all[all.length - 1]];
+				const list = shape(size, seed).waves;
+				const [back, front] = [list[0], list[list.length - 1]];
 				const low = 0.3 * size.height + back.amp * (1 - 0.2);
 				const high = cap(size) - back.amp * (1 + 0.2);
-				const share = (back.mid - all[2].mid) / (back.mid - front.mid);
+				const share = (back.mid - list[2].mid) / (back.mid - front.mid);
 				return {
 					phase: ((back.phase % 1) + 1) % 1,
 					lean: front.phase - back.phase,
@@ -692,7 +697,7 @@ describe('waves: seed variation (PAT-04, PAT-10)', () => {
 					front: front.mid / back.mid,
 					stack: (back.mid - low) / (high - low),
 					fade: back.amp / front.amp,
-					shift: all[2].phase - (back.phase + (front.phase - back.phase) * share)
+					shift: list[2].phase - (back.phase + (front.phase - back.phase) * share)
 				};
 			});
 			const range = (key: keyof (typeof traits)[number]) => {
@@ -718,6 +723,126 @@ describe('waves: seed variation (PAT-04, PAT-10)', () => {
 			expect(range('front')[1]).toBeLessThanOrEqual(0.4);
 		}
 	);
+});
+
+describe('waves: seed axes at the ends of their range (PAT-04)', () => {
+	/** Positions of the 18 draws: phase, lean, taper, front, stack, fade, then the 12 slot shifts. */
+	const draw = { phase: 0, lean: 1, taper: 2, front: 3, stack: 4, fade: 5, slot: 6 };
+	/** Stand-in for the PRNG: the given draws by position, 0.5 (the middle of every axis) elsewhere. */
+	function geometryAt(size: Size, draws: Record<number, number>, params: Params = {}): Layout {
+		let i = 0;
+		const rng = () => draws[i++] ?? 0.5;
+		return layout(size.width, size.height, { ...defaults, ...params }, rng);
+	}
+	const canvases = [...presets, ...landscapes, ...customs, ...portraitCustoms];
+	const amplitudes: Params[] = [{ amplitude: 0 }, {}, { amplitude: 1 }];
+	const close = (a: number, b: number, size: Size) =>
+		expect(Math.abs(a - b)).toBeLessThan(1e-9 * Math.max(size.width, size.height));
+
+	it('draws a water profile: crests of 1.2 and troughs of -0.8, sharper than a sine', () => {
+		expect(profile(0)).toBeCloseTo(1.2, 12);
+		expect(profile(0.25)).toBeCloseTo(-0.2, 12);
+		expect(profile(0.5)).toBeCloseTo(-0.8, 12);
+		expect(profile(1)).toBeCloseTo(1.2, 12);
+	});
+
+	it('phase puts a crest of the back wave at the centre at 0', () => {
+		for (const size of canvases) {
+			const geometry = geometryAt(size, { [draw.phase]: 0 });
+			const back = geometry.waves[0];
+			expect(back.phase).toBe(0);
+			const node = curve(geometry, back, size.width).find(([start]) => start.x === size.width / 2);
+			expect(node?.[0].h).toBeCloseTo(back.mid + 1.2 * back.amp, 9);
+		}
+	});
+
+	it('stack lowers the back troughs onto the floor at 0 and lifts its crests to the cap at 1', () => {
+		for (const size of canvases) {
+			for (const params of amplitudes) {
+				const low = geometryAt(size, { [draw.stack]: 0 }, params).waves[0];
+				close(low.mid - 0.8 * low.amp, 0.3 * size.height, size);
+				const high = geometryAt(size, { [draw.stack]: 1 }, params).waves[0];
+				close(high.mid + 1.2 * high.amp, cap(size), size);
+			}
+		}
+	});
+
+	it('front lowers the front troughs to 2% of the shorter side at 0 and its middle line to 40% of the back one at 1', () => {
+		for (const size of canvases) {
+			for (const params of amplitudes) {
+				const unit = Math.min(size.width, size.height);
+				const low = geometryAt(size, { [draw.front]: 0 }, params).waves;
+				const front = low[low.length - 1];
+				close(front.mid - 0.8 * front.amp, 0.02 * unit, size);
+				const high = geometryAt(size, { [draw.front]: 1 }, params).waves;
+				close(high[high.length - 1].mid, 0.4 * high[0].mid, size);
+			}
+		}
+	});
+
+	it('fade makes the back wave 40% to 90% as tall as the front one', () => {
+		for (const size of canvases) {
+			for (const [value, ratio] of [
+				[0, 0.4],
+				[1, 0.9]
+			]) {
+				const list = geometryAt(size, { [draw.fade]: value }).waves;
+				expect(list[0].amp / list[list.length - 1].amp).toBeCloseTo(ratio, 12);
+			}
+		}
+	});
+
+	it('taper moves wave 2 of 6 from a share of 0.304 to 0.496 of the way to the front', () => {
+		for (const size of presets) {
+			for (const [value, share] of [
+				[0, 0.304],
+				[1, 0.496]
+			]) {
+				const list = geometryAt(size, { [draw.taper]: value }).waves;
+				const [back, front] = [list[0], list[list.length - 1]];
+				expect((back.mid - list[2].mid) / (back.mid - front.mid)).toBeCloseTo(share, 12);
+			}
+		}
+	});
+
+	it('lean shifts the front crests by a wavelength either way, and every wave by its share', () => {
+		for (const size of presets) {
+			for (const [value, shift] of [
+				[0, -1],
+				[1, 1]
+			]) {
+				for (const layers of [3, 6, 12]) {
+					const list = geometryAt(size, { [draw.lean]: value, [draw.taper]: 1 }, { layers }).waves;
+					const [back, front] = [list[0], list[list.length - 1]];
+					expect(front.phase - back.phase).toBeCloseTo(shift, 12);
+					for (const wave of list) {
+						const share = (back.mid - wave.mid) / (back.mid - front.mid);
+						expect(wave.phase - back.phase).toBeCloseTo(shift * share, 9);
+					}
+				}
+			}
+		}
+	});
+
+	it('gives each wave its own shift of up to a quarter wavelength: back slot 0, front slot 1, middle wave i slot i + 1', () => {
+		for (const layers of [3, 6, 12]) {
+			const base = geometryAt(phone, {}, { layers }).waves;
+			for (let slot = 0; slot < 12; slot++) {
+				for (const [value, shift] of [
+					[0, -0.25],
+					[1, 0.25]
+				]) {
+					const moved = geometryAt(phone, { [draw.slot + slot]: value }, { layers }).waves;
+					// The wave this slot belongs to; slots past the middle waves of this layer count move none.
+					const owner =
+						slot === 0 ? 0 : slot === 1 ? layers - 1 : slot <= layers - 1 ? slot - 1 : -1;
+					moved.forEach((current, i) => {
+						expect(current.phase - base[i].phase).toBeCloseTo(i === owner ? shift : 0, 12);
+					});
+				}
+			}
+		}
+	});
 });
 
 describe('waves: render time (ENG-07)', () => {

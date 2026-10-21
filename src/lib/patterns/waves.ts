@@ -24,7 +24,7 @@ const FADE_MIN = 0.4;
 const FADE_MAX = 0.9;
 /** Second harmonic of the wave profile: sharper crests and flatter troughs than a sine, like water. At most (1 - π/6) / 2, so the control points of every quarter-wavelength piece stay between the heights of its ends. */
 const SHARP = 0.2;
-/** Largest shift of the crests from the back wave to the front one, in wavelengths, either way: the line through the crests leans. */
+/** Largest shift of the crests from the back wave to the front one, in wavelengths, either way, before each wave's own shift (JITTER): the crests lean. */
 const LEAN = 1;
 /** Largest extra shift of each wave, in wavelengths, either way. */
 const JITTER = 0.25;
@@ -53,7 +53,7 @@ export interface Wave {
 
 /** Geometry of the waves: the wavelength shared by all of them, and every wave, back first. */
 export interface Layout {
-	length: number;
+	wavelength: number;
 	waves: Wave[];
 }
 
@@ -98,20 +98,20 @@ export function layout(width: number, height: number, params: Params, rng: () =>
 	// Wavelength and amplitude both follow the shorter side, so a wave keeps its shape on every
 	// screen: wider screens show more waves instead of wider ones (DEV-05), up to MAX_WAVES.
 	const unit = Math.min(width, height);
-	const length = Math.max(unit / Number(params.frequency), width / MAX_WAVES);
-	const front = lerp(AMP_MIN, AMP_MAX, amplitude) * unit;
-	const back = front * fade;
+	const wavelength = Math.max(unit / Number(params.frequency), width / MAX_WAVES);
+	const frontAmp = lerp(AMP_MIN, AMP_MAX, amplitude) * unit;
+	const backAmp = frontAmp * fade;
 
 	// The back wave sits between the floor and the cap: its troughs stay above FLOOR, and its
 	// crests, the highest points of all waves, below the cap. The front wave keeps its troughs
 	// BOTTOM above the bottom edge; that clearance stays below FRONT_MAX of the back middle line.
 	const cap = Math.min(CAP_HEIGHT * height, CAP * Math.max(width, height));
-	const backMid = lerp(FLOOR * height + back * (1 - SHARP), cap - back * (1 + SHARP), stack);
-	const frontMid = lerp(front * (1 - SHARP) + BOTTOM * unit, FRONT_MAX * backMid, frontDraw);
+	const backMid = lerp(FLOOR * height + backAmp * (1 - SHARP), cap - backAmp * (1 + SHARP), stack);
+	const frontMid = lerp(frontAmp * (1 - SHARP) + BOTTOM * unit, FRONT_MAX * backMid, frontDraw);
 
-	// Middle lines, amplitudes and the lean all follow the same share, so the crests step down in a
-	// straight line from the back wave to the front one: each wave rises above every wave in front
-	// of it at its crests. The back and front waves take slots 0 and 1, so layers only adds waves
+	// Middle lines, amplitudes and the lean all follow the same share, so the crest heights step
+	// down evenly from the back wave to the front one: each wave rises above every wave in front of
+	// it at its crests. The back and front waves take slots 0 and 1, so layers only adds waves
 	// between them.
 	const waves: Wave[] = [];
 	for (let i = 0; i < n; i++) {
@@ -120,11 +120,11 @@ export function layout(width: number, height: number, params: Params, rng: () =>
 		waves.push({
 			band: i,
 			mid: lerp(backMid, frontMid, share),
-			amp: lerp(back, front, share),
+			amp: lerp(backAmp, frontAmp, share),
 			phase: phase + lean * share + shifts[i === 0 ? 0 : i === n - 1 ? 1 : i + 1]
 		});
 	}
-	return { length, waves };
+	return { wavelength, waves };
 }
 
 /**
@@ -134,8 +134,8 @@ export function layout(width: number, height: number, params: Params, rng: () =>
  * are cut exactly there, so nothing is drawn outside the viewBox and editors show what browsers
  * show (ENG-01).
  */
-export function curve({ length }: Layout, wave: Wave, width: number): Segment[] {
-	const tauAt = (x: number) => (x - width / 2) / length + wave.phase;
+export function curve({ wavelength }: Layout, wave: Wave, width: number): Segment[] {
+	const tauAt = (x: number) => (x - width / 2) / wavelength + wave.phase;
 	const start = tauAt(0);
 	const end = tauAt(width);
 	const taus: number[] = [];
@@ -145,7 +145,7 @@ export function curve({ length }: Layout, wave: Wave, width: number): Segment[] 
 
 	const last = taus.length - 1;
 	const xAt = (j: number) =>
-		j === 0 ? 0 : j === last ? width : width / 2 + (taus[j] - wave.phase) * length;
+		j === 0 ? 0 : j === last ? width : width / 2 + (taus[j] - wave.phase) * wavelength;
 	const out: Segment[] = [];
 	for (let j = 1; j <= last; j++) {
 		const [a, b] = [taus[j - 1], taus[j]];
@@ -153,7 +153,7 @@ export function curve({ length }: Layout, wave: Wave, width: number): Segment[] 
 		const run = xb - xa;
 		const ha = wave.mid + wave.amp * profile(a);
 		const hb = wave.mid + wave.amp * profile(b);
-		const rise = (wave.amp * run) / (3 * length);
+		const rise = (wave.amp * run) / (3 * wavelength);
 		out.push([
 			{ x: xa, h: ha },
 			{ x: xa + run / 3, h: ha + rise * slope(a) },
@@ -166,8 +166,9 @@ export function curve({ length }: Layout, wave: Wave, width: number): Segment[] 
 
 /**
  * One wave as a closed path: along the wave from the left edge to the right edge, then along the
- * bottom edge. Inner pieces are a quarter wavelength wide and meet with matching slopes, so each
- * first control point mirrors the previous second one and S leaves it out: about a third less text.
+ * bottom edge. From the second full piece on, each piece is as wide as the one before and meets it
+ * with a matching slope, so its first control point mirrors the previous second one and S leaves
+ * it out: a third less text for each of those pieces.
  */
 function wavePath(segments: Segment[], width: number, height: number): string {
 	const at = ({ x, h }: Point) => `${num(x)} ${num(height - h)}`;
