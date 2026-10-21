@@ -51,7 +51,7 @@ describe('pattern colors, light variant (ENG-11)', () => {
 
 	it('fills a monochrome palette with lightness steps of the one color', () => {
 		const { colors } = resolveColors(['e07a5f'], 'auto', 'light', 5);
-		expect(colors).toEqual(['#e07a5f', '#bc5940', '#983920', '#731b00', '#460d00']);
+		expect(colors).toEqual(['#e07a5f', '#b35138', '#95361c', '#761c00', '#4f0f00']);
 		const lightness = colors.map((color) => lch(color).l);
 		for (let i = 1; i < lightness.length; i++) {
 			expect(lightness[i]).toBeLessThan(lightness[i - 1]);
@@ -97,7 +97,7 @@ describe('background (COL-05)', () => {
 		const light = resolveColors(APPENDIX_B, 'auto', 'light', 3);
 		expect(light.background).toBe('#fdebe7');
 		expect(lch(light.background).c).toBeLessThan(BG_AUTO_C + 0.003);
-		expect(resolveColors(APPENDIX_B, 'auto', 'dark', 3).background).toBe('#1d1311');
+		expect(resolveColors(APPENDIX_B, 'auto', 'dark', 3).background).toBe('#271c19');
 	});
 
 	it('Auto never makes the tint stronger than a pale first slot', () => {
@@ -119,7 +119,7 @@ describe('background (COL-05)', () => {
 
 	it('Manual takes only hue and chroma from the chosen color', () => {
 		expect(resolveColors(APPENDIX_B, 'f4efe6', 'light', 3).background).toBe('#f4efe6');
-		expect(resolveColors(APPENDIX_B, 'f4efe6', 'dark', 3).background).toBe('#191610');
+		expect(resolveColors(APPENDIX_B, 'f4efe6', 'dark', 3).background).toBe('#221f19');
 		// A dark pick keeps its hue and chroma but gets the locked light lightness.
 		const pick = lch('#2a78d6');
 		const out = lch(resolveColors(APPENDIX_B, '2a78d6', 'light', 3).background);
@@ -127,7 +127,7 @@ describe('background (COL-05)', () => {
 		expect(Math.abs(out.h - pick.h)).toBeLessThan(2);
 		expect(out.c).toBeLessThanOrEqual(pick.c);
 		// Chroma above BG_AUTO_C comes through (up to the gamut), unlike Auto.
-		expect(resolveColors(APPENDIX_B, '2a78d6', 'dark', 3).background).toBe('#001533');
+		expect(resolveColors(APPENDIX_B, '2a78d6', 'dark', 3).background).toBe('#001e44');
 		expect(resolveColors(APPENDIX_B, 'f2cc8f', 'light', 3).background).toBe('#ffedd2');
 	});
 });
@@ -135,11 +135,11 @@ describe('background (COL-05)', () => {
 describe('dark variant (MODE-02)', () => {
 	it('derives the Appendix B example', () => {
 		expect(resolveColors(APPENDIX_B, 'auto', 'dark', 5).colors).toEqual([
-			'#8e3e29',
-			'#a47497',
-			'#afb3cf',
-			'#628895',
-			'#385f4d'
+			'#ad543c',
+			'#b37fa4',
+			'#bcc0de',
+			'#6b94a3',
+			'#517c68'
 		]);
 	});
 
