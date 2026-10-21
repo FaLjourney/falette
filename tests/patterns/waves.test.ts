@@ -28,6 +28,20 @@ const landscapes: Size[] = [
 	{ width: 3440, height: 1440 },
 	{ width: 3840, height: 1080 }
 ];
+/** Every laptop and desktop preset in PRD Appendix A, until presets.json exists. */
+const desktopPresets: Size[] = [
+	{ width: 3456, height: 2234 },
+	{ width: 3024, height: 1964 },
+	{ width: 2880, height: 1864 },
+	{ width: 2560, height: 1664 },
+	{ width: 1920, height: 1200 },
+	{ width: 2560, height: 1600 },
+	{ width: 5120, height: 2880 },
+	{ width: 3840, height: 2160 },
+	{ width: 3440, height: 1440 },
+	{ width: 2560, height: 1440 },
+	{ width: 1920, height: 1080 }
+];
 /** Custom sizes at the DEV-04 limits, plus a square. */
 const customs: Size[] = [
 	{ width: 320, height: 7680 },
@@ -369,10 +383,10 @@ describe('waves: proportions (ENG-04, DEV-05)', () => {
 	});
 
 	it('fits frequency waves to the shorter side, and at most 48 across the width', () => {
-		const appendixA = [...Object.values(portraitPresets), ...landscapes];
+		const appendixA = [...Object.values(portraitPresets), ...desktopPresets];
 		for (let frequency = 1; frequency <= 6; frequency++) {
-			for (const size of [...appendixA, ...presets]) {
-				// The limit never binds on a preset, however wide.
+			for (const size of [...appendixA, ...landscapes]) {
+				// The limit never binds on a preset, a tablet on its side or a 32:9 span.
 				const { length } = shape(size, '42', { frequency });
 				expect(length).toBe(Math.min(size.width, size.height) / frequency);
 			}
