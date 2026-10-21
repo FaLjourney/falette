@@ -1,6 +1,6 @@
 # Laporan: pola `hills` (PAT-01)
 
-Draft PR: https://github.com/faljourney/falette/pull/7 (branch `claude/intelligent-newton-pt3d7g`, 7 commit dari main `853a835`). Semua rekomendasi di rencana disetujui:
+Draft PR: https://github.com/faljourney/falette/pull/7 (branch `claude/intelligent-newton-pt3d7g`, 8 commit dari main `853a835`). Semua rekomendasi di rencana disetujui:
 
 1. `softness` = kebulatan bentuk.
 2. Batas 30% berlaku di semua kanvas.
@@ -22,7 +22,8 @@ Setelah meninjau pratinjau pertama, FaL meminta `FRONT_MAX` diturunkan dari 0,75
 | 4 `e145607` | `scripts/preview-pattern.js` | Selain seed 42 di 6 preset, skrip kini juga menulis seed 1–8 di and-fhd20 dan mba-13, serta setiap parameter di nilai min, awal, dan maks di and-fhd20. Semua dalam Terang dan Gelap, plus satu lembar PNG per set, dirender dengan Chromium dari Playwright. | PAT-10, ENG-07 |
 | 5 `2812528` | `docs/laporan/hills/` | Laporan ini dan tiga pratinjau PNG. | |
 | 6 `c52372d` | `src/lib/patterns/hills.ts`, `tests/patterns/hills.test.ts`, 56 snapshot hills | Revisi: `FRONT_MAX` 0,75 → 0,6, dua tes yang terikat pada rentang lama, dan snapshot hills. | PAT-10, ENG-08 |
-| 7 | `docs/laporan/hills/` | Laporan dan ketiga pratinjau diperbarui untuk revisi. | |
+| 7 `c8669dc` | `docs/laporan/hills/` | Laporan dan ketiga pratinjau diperbarui untuk revisi. | |
+| 8 | `docs/laporan/hills/laporan-hills.md` | Lima pernyataan kurang tepat diperbaiki setelah verifikasi independen (bagian terakhir). | |
 
 Tidak disentuh: engine, palet, arcs, PRD, AGENTS.md, dan bagian lain katalog. Tanda ✅ belum diberikan. Versi engine tetap 1, dan snapshot mock serta arcs tidak berubah.
 
@@ -85,7 +86,7 @@ Isi tes hills:
 - **Visibilitas:** setiap lapisan terlihat di puncak utamanya, minimal 1,8% tinggi bukit, yaitu (1 − `FRONT_MAX`)(1 − `TAPER`)/9.
 - **Seed dan waktu render:** variasi seed di 6 preset; setiap sumbu seed bergerak ke dua arah; batas waktu ENG-07.
 
-**Uji mutasi.** Sembilan perubahan kode yang sengaja salah, diulang pada kode sesudah revisi, dan semuanya tertangkap tes:
+**Uji mutasi.** Sepuluh perubahan kode yang sengaja salah, diulang pada kode sesudah revisi, dan semuanya tertangkap tes:
 
 - lembah belakang yang mengabaikan batas 30%;
 - `DEEP_MAX` di atas 1;
@@ -95,7 +96,7 @@ Isi tes hills:
 - taper 1;
 - tanpa pemotongan di tepi kiri;
 - `FRONT_MAX` dipersempit ke 0,5 (tertangkap tes sumbu seed);
-- `FRONT_MAX` dikembalikan ke 0,7 (tertangkap tes visibilitas).
+- `FRONT_MAX` dinaikkan ke 0,7, atau dikembalikan ke nilai lama 0,75 (keduanya tertangkap tes visibilitas).
 
 Sebelum revisi, mutasi kedelapan adalah `FRONT_MAX` 0,6. Nilai itu kini menjadi nilai resmi, jadi mutasinya diganti 0,5.
 
@@ -112,7 +113,7 @@ Metrik grid sama dengan arcs: seed 1–30, 435 pasangan. Batas khusus hills yang
 | desk-uw | 0,512 | 0,267 | 0 | 4 |
 | desk-5k | 0,517 | 0,254 | 0 | 4 |
 
-Semua preset lulus. Margin tersempit ada di and-fhd20 dan ios-63: 5 dari maksimal 8 pasangan di bawah 0,2, dan median 0,495 terhadap batas 0,45. Sebagai pembanding, seed yang sama dengan `height` dinaikkan satu langkah berjarak 0,04–0,08.
+Semua preset lulus. Margin tersempit ada di and-fhd20 dan ios-63: 5 dari maksimal 8 pasangan di bawah 0,2, dan pasangan termirip 0,153 terhadap batas 0,1. Median terendah ada di ipad-pro-13: 0,494 terhadap batas 0,45. Sebagai pembanding, seed yang sama dengan `height` dinaikkan satu langkah berjarak median 0,04–0,08 per preset (per seed 0,02–0,11).
 
 **Titik lemah, tidak diuji dengan batas ini:**
 
@@ -134,7 +135,7 @@ Pasangan termirip kini adalah seed dengan tinggi lapisan depan yang hampir sama,
 
 - **Kesimpulan:** jauh di bawah batas ENG-07, termasuk render terlama.
 - **Timer Chromium:** resolusinya 0,1 ms, jadi median di bawah itu tercatat 0,1 ms.
-- **Kasus terberat:** ukuran Custom 7680×320 (24:1) dengan 10 lapisan butuh 0,9 ms dan 37 KB, karena kanvas selebar itu berisi banyak bukit.
+- **Kasus terberat:** ukuran Custom 7680×320 (24:1) dengan 10 lapisan, karena kanvas selebar itu berisi banyak bukit. Di seed 42: median 0,6 ms dan 37 KB. File terbesar dari seed 1–200 adalah seed 158: 51 KB, median 1,0 ms.
 - **Pengulangan:** semua angka di tabel ini diukur ulang sesudah revisi. Selisihnya dari pengukuran pertama hanya variasi mesin.
 - **Ukuran kode:** engine + hills setelah minify 6,5 KB, atau 3,3 KB gzip (engine + arcs: 3,1 KB gzip). JavaScript awal Home dan Create belum berubah, karena belum ada rute yang memuat pola.
 - **Sumber angka:** container dan Chromium headless, bukan perangkat asli.
@@ -169,14 +170,14 @@ File SVG-nya tidak di-commit; skrip menulisnya ke `previews/hills/`, yang di-git
 
 **Cara mengukur.** Luas lapisan depan dibagi luas seluruh bukit, dihitung di 400 kolom per kanvas. Lapisan depan dicat terakhir, jadi seluruh luas di bawah punggungnya terlihat. Hasil ini mereproduksi angka FaL tepat: 11 seed yang sama, yaitu 5, 7, 8, 9, 10, 15, 16, 19, 22, 26, dan 30, di keenam preset.
 
-| Preset | Seed > 50%, sebelum | Seed > 50%, sesudah | Terbesar, sebelum → sesudah | Median, sebelum → sesudah |
+| Preset | Seed > 50%, sebelum | Seed > 50%, sesudah | Terbesar, sebelum → sesudah | Median (rata-rata seed ke-15 dan ke-16 dari 30), sebelum → sesudah |
 | --- | --- | --- | --- | --- |
-| and-fhd20 | 11 | 4 (7, 8, 15, 19) | 66,8% → 53,6% | 35,6% → 30,3% |
-| ios-63 | 11 | 3 (8, 15, 19) | 66,7% → 53,5% | 35,5% → 30,2% |
-| ipad-pro-13 | 11 | 1 (15) | 64,3% → 51,7% | 34,0% → 29,0% |
-| mba-13 | 11 | 1 (15) | 67,0% → 54,0% | 34,9% → 29,7% |
-| desk-uw | 11 | 1 (15) | 63,5% → 51,0% | 33,8% → 28,8% |
-| desk-5k | 11 | 2 (15, 16) | 66,7% → 53,5% | 34,8% → 29,6% |
+| and-fhd20 | 11 | 4 (7, 8, 15, 19) | 66,8% → 53,6% | 35,1% → 29,8% |
+| ios-63 | 11 | 3 (8, 15, 19) | 66,7% → 53,5% | 35,0% → 29,7% |
+| ipad-pro-13 | 11 | 1 (15) | 64,3% → 51,7% | 33,5% → 28,7% |
+| mba-13 | 11 | 1 (15) | 67,0% → 54,0% | 34,5% → 29,4% |
+| desk-uw | 11 | 1 (15) | 63,5% → 51,0% | 32,8% → 28,0% |
+| desk-5k | 11 | 2 (15, 16) | 66,7% → 53,5% | 34,2% → 29,2% |
 
 Masih ada 1–4 seed yang sedikit di atas 50%, paling banyak 54%. Seed 15 adalah satu-satunya yang melewati 50% di semua preset. Menghapusnya sama sekali butuh `FRONT_MAX` yang lebih rendah lagi; itu tidak kulakukan karena tidak diminta.
 
@@ -212,5 +213,26 @@ Batas variasi seed (median ≥ 0,45, termirip ≥ 0,1, maksimal 2% di bawah 0,2)
 
 **Dampaknya:**
 
-- Dengan parameter awal, median turun 0,02–0,03, karena rentang tinggi lapisan depan (sumbu seed terkuat) menyempit 25%. Sebaliknya, pasangan termirip menjauh di semua preset, dan jumlah pasangan di bawah 0,3 turun di 5 dari 6 preset.
-- Dengan `layers` 3, variasinya melemah: median turun 0,03–0,04, dan di ponsel 51 pasangan (11,7%) berada di bawah 0,2. Seperti sebelumnya, ini tidak diuji dengan batas, tapi kucatat sebagai titik lemah.
+- Dengan parameter awal, median turun 0,015–0,027, karena rentang tinggi lapisan depan (sumbu seed terkuat) menyempit 25%. Sebaliknya, pasangan termirip menjauh di semua preset, dan jumlah pasangan di bawah 0,3 turun di 5 dari 6 preset.
+- Dengan `layers` 3, variasinya melemah: median turun 0,027–0,042, dan di ponsel 51 pasangan (11,7%) berada di bawah 0,2. Seperti sebelumnya, ini tidak diuji dengan batas, tapi kucatat sebagai titik lemah.
+
+## Verifikasi independen revisi
+
+Sebelum laporan ini difinalkan, revisi diperiksa ulang oleh empat pemeriksa independen yang hanya membaca repo. Masing-masing memakai skrip yang ditulis sendiri:
+
+- **Metrik variasi seed:** semua angka di tabel variasi seed, sebelum dan sesudah, cocok sampai 3 desimal.
+- **Luas lapisan depan:** daftar seed dan nilai terbesar cocok. Hasil dengan 400 dan 2000 kolom sama.
+- **Diff `c52372d`:** di `src/` hanya `FRONT_MAX` dan komentarnya yang berubah, dan hanya 56 snapshot hills yang berubah. Tidak ada referensi lain ke rentang lama yang tertinggal.
+- **Klaim di laporan:** commit, angka dari kode dan tes, ukuran file, dan slug tautan semuanya cocok.
+
+Setiap temuan lalu diuji ulang oleh pemeriksa kedua yang mencoba membantahnya. Ada lima pernyataan kurang tepat yang terkonfirmasi, dan semuanya sudah diperbaiki di laporan ini:
+
+| Pernyataan lama | Masalah | Perbaikan |
+| --- | --- | --- |
+| Median tersempit 0,495 di and-fhd20 | Median terendah ada di ipad-pro-13 (0,494) | Kalimat margin dipisah: jumlah pasangan dan termirip di and-fhd20/ios-63, median di ipad-pro-13 |
+| Median variasi turun 0,02–0,03 | desk-5k hanya turun 0,015 | 0,015–0,027 (dan `layers` 3: 0,027–0,042) |
+| Kolom "Median" luas lapisan depan | Isinya nilai ke-16 dari 30, bukan median | Diganti median sebenarnya; selisihnya 0,3–1,0 poin |
+| Kasus terberat 7680×320: 37 KB | Itu ukuran seed 42; file terbesar dari seed 1–200 adalah 51 KB | Keduanya disebut |
+| Mutasi "`FRONT_MAX` dikembalikan ke 0,7" | Nilai lama 0,75, bukan 0,7 | 0,7 dan 0,75 diuji, dan keduanya tertangkap |
+
+Tidak ada kesalahan di kode, tes, atau snapshot.
