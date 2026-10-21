@@ -1,6 +1,6 @@
 # Laporan: pola `hills` (PAT-01)
 
-Draft PR: https://github.com/faljourney/falette/pull/7 (branch `claude/intelligent-newton-pt3d7g`, 8 commit dari main `853a835`). Semua rekomendasi di rencana disetujui:
+Draft PR: https://github.com/faljourney/falette/pull/7 (branch `claude/intelligent-newton-pt3d7g`, 9 commit dari main `853a835`). Semua rekomendasi di rencana disetujui:
 
 1. `softness` = kebulatan bentuk.
 2. Batas 30% berlaku di semua kanvas.
@@ -23,9 +23,10 @@ Setelah meninjau pratinjau pertama, FaL meminta `FRONT_MAX` diturunkan dari 0,75
 | 5 `2812528` | `docs/laporan/hills/` | Laporan ini dan tiga pratinjau PNG. | |
 | 6 `c52372d` | `src/lib/patterns/hills.ts`, `tests/patterns/hills.test.ts`, 56 snapshot hills | Revisi: `FRONT_MAX` 0,75 → 0,6, dua tes yang terikat pada rentang lama, dan snapshot hills. | PAT-10, ENG-08 |
 | 7 `c8669dc` | `docs/laporan/hills/` | Laporan dan ketiga pratinjau diperbarui untuk revisi. | |
-| 8 | `docs/laporan/hills/laporan-hills.md` | Lima pernyataan kurang tepat diperbaiki setelah verifikasi independen (bagian terakhir). | |
+| 8 `e195529` | `docs/laporan/hills/laporan-hills.md` | Lima pernyataan kurang tepat diperbaiki setelah verifikasi independen (bagian terakhir). | |
+| 9 | `docs/falette-100-pattern.md`, `docs/laporan/hills/laporan-hills.md` | Tanda ✅ di depan Hills setelah FaL menyetujui pratinjau, dan catatan Lampiran A dihapus. | PAT-10 |
 
-Tidak disentuh: engine, palet, arcs, PRD, AGENTS.md, dan bagian lain katalog. Tanda ✅ belum diberikan. Versi engine tetap 1, dan snapshot mock serta arcs tidak berubah.
+Tidak disentuh: engine, palet, arcs, PRD, AGENTS.md, dan bagian katalog selain aturan potret dan tanda ✅ Hills. Versi engine tetap 1, dan snapshot mock serta arcs tidak berubah.
 
 ## Bentuk dan parameter
 
@@ -155,14 +156,12 @@ File SVG-nya tidak di-commit; skrip menulisnya ke `previews/hills/`, yang di-git
 - Perangkat asli (laptop dan ponsel kelas menengah).
 - Membuka SVG hasil ekspor di Figma, Illustrator, dan Inkscape.
 - Tampilan di bawah overlay jam lock screen, karena overlay belum dibuat.
-- Persetujuan visual PAT-10 darimu. Tanda ✅ di katalog belum diberikan.
 
 ## Catatan
 
 - **`softness` 0** memberi sisi lurus dan puncak lancip, sehingga bukit lebih mirip pegunungan. Ini sesuai arti yang disetujui; mohon dinilai di `parameter.png`. Efeknya paling jelas di seed dengan bukit lebar.
 - **Skrip pratinjau** kini membutuhkan Chromium dari Playwright. Di komputermu cukup jalankan `npx playwright install chromium` sekali; langkah ini juga sudah dibutuhkan oleh `npm test`.
 - **Commit 2** sempat diperbaiki sebelum di-push pertama kali: dua komentar konstanta (`FLOOR`, `TAPER`) diperjelas, tanpa perubahan kode. Revisi `FRONT_MAX` dibuat sebagai commit baru, tanpa menulis ulang riwayat yang sudah di-push.
-- **Lampiran A** masih menyebut `and-fhd20` termasuk yang paling tinggi, padahal `and-pixel` dan `and-15k` sedikit lebih tinggi. Tes hills memakai semua 17 preset potret, jadi tidak terpengaruh. PRD tidak kuubah.
 
 ## Revisi setelah pratinjau: `FRONT_MAX` 0,75 → 0,6
 
