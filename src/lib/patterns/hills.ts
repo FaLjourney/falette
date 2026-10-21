@@ -19,8 +19,8 @@ const CAP = 0.5;
 const CAP_HEIGHT = 0.7;
 /** Lowest main peak of the front layer the seed can pick, as a share of the back one. */
 const FRONT_MIN = 0.15;
-/** Highest main peak of the front layer the seed can pick, as a share of the back one: the strongest seed axis. */
-const FRONT_MAX = 0.75;
+/** Highest main peak of the front layer the seed can pick, as a share of the back one: the strongest seed axis, low enough that the front layer seldom covers over half of the hills. */
+const FRONT_MAX = 0.6;
 /** Strongest uneven spacing of the main peaks: they crowd towards the front layer above 0 and towards the back below 0; every step stays at least 40% of an even one. */
 const TAPER = 0.6;
 /** Smallest distance from a peak to the next valley on the back ridge, as a share of the height: many small hills. */

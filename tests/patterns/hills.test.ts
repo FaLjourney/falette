@@ -460,7 +460,7 @@ describe('hills: parameters', () => {
 				] as Params[]) {
 					const all = ridges(size, seed, params);
 					// The thinnest step: (1 - FRONT_MAX) (1 - TAPER) / (LAYERS.max - 1) of the back peak.
-					const step = (0.25 * 0.4 * mainPeak(all[0]).h) / 9;
+					const step = (0.4 * 0.4 * mainPeak(all[0]).h) / 9;
 					all.forEach((ridge, i) => {
 						const peak = mainPeak(ridge);
 						const above = Math.max(...all.slice(i + 1).flatMap((r) => r.points.map((p) => p.h)));
@@ -545,7 +545,7 @@ describe('hills: seed variation (PAT-04, PAT-10)', () => {
 			expect(broad).toBeGreaterThanOrEqual(0.4);
 			const [low, high] = range('front');
 			expect(low).toBeLessThanOrEqual(0.3);
-			expect(high).toBeGreaterThanOrEqual(0.65);
+			expect(high).toBeGreaterThanOrEqual(0.52);
 			const [shallow, deep] = range('depth');
 			expect(shallow).toBeLessThanOrEqual(0.3);
 			expect(deep).toBeGreaterThanOrEqual(0.6);
