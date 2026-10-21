@@ -5,15 +5,16 @@ import { num } from '../../src/lib/engine/svg';
 import { ENGINE_VERSION, render } from '../../src/lib/engine/render';
 import type { Params, RenderConfig, Size } from '../../src/lib/engine/types';
 import arcs, { layout, type Disc } from '../../src/lib/patterns/arcs';
-import { representativePresets } from '../fixtures/presets';
+import { portraitPresets, representativePresets } from '../fixtures/presets';
 
 const defaults: Params = Object.fromEntries(
 	Object.entries(arcs.params).map(([key, def]) => [key, def.default])
 );
 const phone = representativePresets['and-fhd20'];
 const presets = Object.values(representativePresets);
-/** Appendix A phones, from the tallest (20:9) to the widest. */
+/** Appendix A phones, from the tallest (and-pixel, a little taller than 20:9) to the widest. */
 const phones: Size[] = [
+	{ width: 1280, height: 2856 },
 	{ width: 1080, height: 2400 },
 	{ width: 1080, height: 2340 },
 	{ width: 1206, height: 2622 },
@@ -38,6 +39,14 @@ const customs: Size[] = [
 	{ width: 1000, height: 1000 }
 ];
 const sizes = [...presets, ...phones, ...landscapes, ...customs];
+/** Custom portrait sizes: the DEV-04 limits, a 21:9 phone and screens just taller than wide. */
+const portraitCustoms: Size[] = [
+	{ width: 320, height: 7680 },
+	{ width: 1644, height: 3840 },
+	{ width: 320, height: 400 },
+	{ width: 1000, height: 1001 },
+	{ width: 7679, height: 7680 }
+];
 const extremes: Params[] = [
 	{},
 	{ layers: 3 },
@@ -51,6 +60,14 @@ const extremes: Params[] = [
 	{ layers: 3, curve: 0, focus: 1 }
 ];
 const seeds = (count: number) => Array.from({ length: count }, (_, i) => String(i + 1));
+/** Every seed the arcs tests use on portrait sizes, and every snapshot seed (1000 seeds run on landscapes only). */
+const testSeeds = [...seeds(300), 'senja-teduh-42', '1234'];
+/** Extreme params plus every curve step, so tying the portrait apex to curve again (lowest at curve 0) fails. */
+const floorParams: Params[] = [
+	...extremes,
+	...Array.from({ length: 21 }, (_, i) => ({ curve: i / 20 })),
+	...Array.from({ length: 21 }, (_, i) => ({ layers: 12, curve: i / 20, focus: 0 }))
+];
 
 function config(overrides: Partial<RenderConfig> = {}): RenderConfig {
 	return {
@@ -90,10 +107,22 @@ function visible(size: Size, all: Disc[]): Disc[] {
 	});
 }
 
-/** Largest arch unit, recomputed from the approved HEADROOM, FIT, LANDSCAPE_MIN and PORTRAIT_MIN. */
+/** Largest arch unit, recomputed from the approved HEADROOM, FIT and LANDSCAPE_MIN. */
 function archUnit({ width, height }: Size): number {
-	const h = Math.min(height, width / (9 / 20));
-	return Math.min(0.8 * h, 0.36 * Math.max(width, (4 / 3) * h));
+	return Math.min(0.8 * height, 0.36 * Math.max(width, (4 / 3) * height));
+}
+
+/** Outer apexes outside 30–50% of the height, for every test seed and floor param set. */
+function floorMisses(size: Size, label: string): string[] {
+	const wrong: string[] = [];
+	for (const seed of testSeeds) {
+		for (const params of floorParams) {
+			const share = outline(size, discs(size, seed, params)).apex / size.height;
+			if (share < 0.3 || share > 0.5)
+				wrong.push(`${label} seed ${seed} ${JSON.stringify(params)}: ${share}`);
+		}
+	}
+	return wrong;
 }
 
 interface ArcCommand {
@@ -378,13 +407,16 @@ describe('arcs: proportions (ENG-04, DEV-05)', () => {
 		}
 	});
 
-	it('gives screens taller than 9:20 more sky instead of flat stripes', () => {
-		const tall = { width: 320, height: 7680 };
-		for (const seed of seeds(300)) {
-			const { apex, half } = outline(tall, discs(tall, seed));
-			expect(half).toBeLessThanOrEqual(1.3 * tall.width);
-			expect(apex).toBeLessThanOrEqual(0.1 * tall.height);
-		}
+	it('keeps the outer apex of every portrait preset between 30% and half of the height', () => {
+		const wrong = Object.entries(portraitPresets).flatMap(([id, size]) => floorMisses(size, id));
+		expect(wrong).toEqual([]);
+	});
+
+	it('keeps the same 30% floor on custom portrait sizes, 320x7680 included', () => {
+		const wrong = portraitCustoms.flatMap((size) =>
+			floorMisses(size, `${size.width}x${size.height}`)
+		);
+		expect(wrong).toEqual([]);
 	});
 });
 
@@ -405,13 +437,19 @@ describe('arcs: parameters', () => {
 		}
 	});
 
-	it('curve raises and narrows the arch monotonically, up to a semicircle', () => {
+	it('curve narrows the arch up to a semicircle, raising it on landscape and square and keeping its height on portrait', () => {
 		for (const seed of seeds(20)) {
-			for (const size of presets) {
-				let previous = outline(size, discs(size, seed, { curve: 0 }));
+			for (const size of [...presets, ...customs]) {
+				const flat = outline(size, discs(size, seed, { curve: 0 }));
+				let previous = flat;
 				for (let step = 1; step <= 20; step++) {
 					const current = outline(size, discs(size, seed, { curve: step / 20 }));
-					expect(current.apex).toBeGreaterThanOrEqual(previous.apex);
+					if (size.height > size.width) {
+						// outline() rebuilds the apex from r and cy, which can move an unchanged apex by an ulp.
+						expect(Math.abs(current.apex - flat.apex)).toBeLessThanOrEqual(1e-9 * size.height);
+					} else {
+						expect(current.apex).toBeGreaterThan(previous.apex);
+					}
 					expect(current.half).toBeLessThanOrEqual(previous.half);
 					previous = current;
 				}
@@ -537,7 +575,13 @@ describe('arcs: seed variation (PAT-04, PAT-10)', () => {
 				};
 			});
 			const apexes = traits.map((t) => t.apex);
-			expect(Math.max(...apexes) / Math.min(...apexes)).toBeGreaterThanOrEqual(2);
+			if (size.height > size.width) {
+				// Portrait apexes stay within 30–48% of the height: the seeds reach both ends of it.
+				expect(Math.min(...apexes)).toBeLessThanOrEqual(0.33 * size.height);
+				expect(Math.max(...apexes)).toBeGreaterThanOrEqual(0.45 * size.height);
+			} else {
+				expect(Math.max(...apexes) / Math.min(...apexes)).toBeGreaterThanOrEqual(2);
+			}
 			expect(new Set(traits.map((t) => t.opening))).toEqual(new Set([true, false]));
 			expect(new Set(traits.map((t) => t.gaps))).toEqual(new Set([true, false]));
 			const clear = (value: number, apex: number) => Math.abs(value) > 1e-3 * apex;

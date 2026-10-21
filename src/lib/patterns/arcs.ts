@@ -13,11 +13,11 @@ const HEADROOM = 0.8;
 const FIT = 0.36;
 /** Narrowest screen sized as landscape (4:3, a tablet on its side); narrower screens crop the arch instead of shrinking it. */
 const LANDSCAPE_MIN = 4 / 3;
-/** Tallest screen sized by its height (9:20, the tallest phone preset); taller screens only get more sky. */
-const PORTRAIT_MIN = 9 / 20;
-/** Smallest arch the seed can pick, as a share of the largest: a 2.5x range, the strongest seed axis. */
+/** Lowest outer apex on a portrait screen (taller than wide), as a share of its height, at every seed and curve. */
+const PORTRAIT_FLOOR = 0.3;
+/** Smallest landscape arch the seed can pick, as a share of the largest: a 2.5x range, the strongest seed axis. */
 const SIZE_MIN = 0.4;
-/** Height / half-width of the arch at curve 0 (curve 1 is a semicircle, ratio 1): flat, but still a dome on a phone. */
+/** Height / half-width of the arch at curve 0 (curve 1 is a semicircle, ratio 1): the flattest arch. */
 const FLAT = 0.4;
 /** Largest opening under the innermost band, as a share of the arch height; when present it is at least half of this. */
 const HOLE_MAX = 0.5;
@@ -44,24 +44,20 @@ const style = (r: number) => (r < STYLE_SPLIT ? -1 : (r - STYLE_SPLIT) / (1 - ST
 /**
  * Size of the largest arch the seed can pick. Landscape screens size it by width so it fits
  * with air at the sides, capped by height for sky on top. Screens narrower than 4:3 are sized
- * like a 4:3 screen of the same height (the arch crops at the sides), and screens taller than
- * 9:20 like a 9:20 screen of the same width.
+ * like a 4:3 screen of the same height (the arch crops at the sides), so on portrait screens
+ * it is the highest apex: FIT · LANDSCAPE_MIN, 48% of the height.
  */
 function archUnit(width: number, height: number): number {
-	const h = Math.min(height, width / PORTRAIT_MIN);
-	return Math.min(HEADROOM * h, FIT * Math.max(width, LANDSCAPE_MIN * h));
+	return Math.min(HEADROOM * height, FIT * Math.max(width, LANDSCAPE_MIN * height));
 }
 
 /**
- * One arch whose circle centres lie `depth` below the bottom edge (lean then shifts the inner
- * centres sideways). `ratio` is the outer arc's height / half-width; sqrt(height · half-width)
- * stays `size`, so a flatter arch gets lower as it gets wider. Returns the apex height above the
- * bottom edge and the depth.
+ * Depth of the circle centres below the bottom edge for an outer arc of this apex height and
+ * `ratio`, its height / half-width (lean then shifts the inner centres sideways).
  */
-function arch(size: number, ratio: number): { apex: number; depth: number } {
-	const apex = size * Math.sqrt(ratio);
+function depthOf(apex: number, ratio: number): number {
 	const halfWidth = apex / ratio;
-	return { apex, depth: (halfWidth * halfWidth - apex * apex) / (2 * apex) };
+	return (halfWidth * halfWidth - apex * apex) / (2 * apex);
 }
 
 /**
@@ -75,26 +71,37 @@ export function layout(width: number, height: number, params: Params, rng: () =>
 
 	// Seed: exactly five draws, in this order, before anything the params touch.
 	const unit = archUnit(width, height);
-	const size = unit * lerp(SIZE_MIN, 1, rng());
+	const sizeDraw = rng();
 	const hole = style(rng());
 	const holeShare = hole < 0 ? 0 : (HOLE_MAX * (1 + hole)) / 2;
 	const leanDraw = 2 * rng() - 1;
 	const taperDraw = 2 * rng() - 1;
 	const gapDraw = style(rng());
 
-	// Stripe budget, from the seed only: at LAYERS.max and curve 0 (the thinnest bands this
-	// seed can get) every stripe, pinched side included, stays >= MIN_LINE. The gap takes
-	// its share first; lean and taper split the rest, so |lean| < 1 and |taper| < 1.
-	// The budget always fits while need < 0.5:
+	// Outer apex. Landscape: the seed sets sqrt(apex · half-width) to `size`, so a flatter arch
+	// gets lower as it gets wider. Portrait: the seed sets the apex itself, from PORTRAIT_FLOOR
+	// of the height up to the unit, and curve only sets the width, so the floor holds at every
+	// curve, curve 0 included.
+	const portrait = height > width;
+	const size = unit * lerp(SIZE_MIN, 1, sizeDraw);
+	const portraitApex = lerp(PORTRAIT_FLOOR * height, unit, sizeDraw);
+
+	// Stripe budget, from the seed only: at LAYERS.max and the lowest apex this seed can get
+	// (curve 0, or any curve on portrait) every stripe, pinched side included, stays >= MIN_LINE.
+	// The gap takes its share first; lean and taper split the rest, so |lean| < 1 and |taper| < 1.
+	// The budget always fits while need < 0.5 (portrait apexes are at least 0.625 units):
 	// MIN_LINE · LAYERS.max < (1 - HOLE_MAX) · sqrt(FLAT) · SIZE_MIN / 2.
-	const need = (MIN_LINE * unit * LAYERS.max) / ((1 - holeShare) * arch(size, FLAT).apex);
+	const lowest = portrait ? portraitApex : size * Math.sqrt(FLAT);
+	const need = (MIN_LINE * unit * LAYERS.max) / ((1 - holeShare) * lowest);
 	const gap = gapDraw < 0 ? 0 : Math.min(1 - need, Math.max(need, GAP_MAX * gapDraw));
 	const stripe = gap > 0 ? Math.min(gap, 1 - gap) : 1;
 	const slack = 1 - Math.sqrt(need / stripe);
 	const lean = leanDraw * slack;
 	const taper = taperDraw * slack;
 
-	const { apex, depth } = arch(size, lerp(FLAT, 1, curve));
+	const ratio = lerp(FLAT, 1, curve);
+	const apex = portrait ? portraitApex : size * Math.sqrt(ratio);
+	const depth = depthOf(apex, ratio);
 	const holeTop = holeShare * apex;
 
 	// n bands fill the span from the opening up to the apex. Each band but the last ends in a
