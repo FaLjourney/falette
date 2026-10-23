@@ -29,13 +29,16 @@ Setelah meninjau pratinjau, FaL meminta **batas kecuraman**: tinggi gelombang da
 | 5 `3b2e027` | `src/lib/patterns/waves.ts`, `tests/patterns/waves.test.ts` | Setelah verifikasi independen: 8 tes rng tiruan, cek `amplitude` di setiap langkah, komentar yang dibetulkan, serta nama `wavelength`, `frontAmp`, dan `backAmp`. Hasil SVG tidak berubah. | PAT-04, PAT-10 |
 | 6 `3dea333` | `docs/laporan/waves/laporan-waves.md` | Laporan dibetulkan setelah verifikasi independen. | |
 | 7 `018ab2c` | `src/lib/patterns/waves.ts`, `tests/patterns/waves.test.ts`, 4 snapshot waves | Revisi: batas kecuraman `STEEP` 0,6 (konstanta ke-16), dua tes yang berubah karena kebutuhannya berubah, satu tes baru, dan 4 snapshot `frequency` 6. | PAT-10, ENG-08 |
-| 8 | `docs/laporan/waves/` | Laporan, `parameter.png`, dan gambar baru `kecuraman-sebelum-sesudah.png` untuk revisi. | PAT-10 |
+| 8 `2a202a0` | `docs/laporan/waves/` | Laporan, `parameter.png`, dan gambar baru `kecuraman-sebelum-sesudah.png` untuk revisi. | PAT-10 |
+| 9 `d52f43a` | `tests/patterns/waves.test.ts` | Batas waktu 15 detik untuk 10 tes waves yang berat (15 kasus), tanpa mengubah isi pengecekannya. | PAT-10 |
+| 10 | `docs/falette-100-pattern.md`, laporan ini | Tanda ✅ di depan Waves setelah FaL menyetujui pratinjau, dan catatan batas 48 gelombang serta kecuraman di kolom Catatan baris waves. | PAT-10, ENG-07 |
 
 Yang tidak disentuh:
-- Engine, palet, arcs, hills, PRD, AGENTS.md, dan katalog.
+- Engine, palet, arcs, hills, PRD, dan AGENTS.md.
+- Katalog, kecuali baris waves: tanda ✅ dan dua catatan di kolom Catatan (commit 10).
 - Skrip pratinjau: tidak perlu diubah, karena sudah mengeluarkan `frequency` 1 / 2 / 6.
 
-Versi engine tetap 1. Snapshot mock, arcs, dan hills tidak berubah. Tanda ✅ di katalog belum diberikan, karena menunggu persetujuan pratinjau.
+Versi engine tetap 1. Snapshot mock, arcs, dan hills tidak berubah. Tanda ✅ di katalog diberikan di commit 10, setelah FaL menyetujui pratinjau sesudah revisi kecuraman.
 
 ## Bentuk dan parameter
 
@@ -172,7 +175,14 @@ Isi tes waves:
 
 Tes waves berjalan sekitar 20 detik (hills sekitar 10 detik). Tes terlama 2,4 detik, sekitar setengah batas 5 detik per tes. Di mesin yang sedang sibuk, tes waves dan hills sama-sama bisa melewati batas itu.
 
-Di container baru yang dipakai untuk revisi kecuraman, mesinnya lebih lambat. Tes waves berjalan sekitar 28 detik, dan tes terlamanya 3,9 detik: batas bawah di lanskap dan persegi, yang tidak berubah oleh revisi. Tes yang sama di hills berjalan 1,1 detik di container itu. Marginnya kini sekitar 1,3×, jadi tes ini yang paling dulu kena batas 5 detik di mesin lambat.
+Di container baru yang dipakai untuk revisi kecuraman, mesinnya lebih lambat. Tes waves berjalan sekitar 28 detik, dan tes terlamanya 3,6–4,6 detik: batas bawah di lanskap dan persegi, yang tidak berubah oleh revisi. Tes yang sama di hills berjalan 1,1 detik di container itu.
+
+Atas permintaan FaL (commit 9), tes waves yang berat kini punya batas waktu 15 detik, tiga kali batas bawaan, supaya tidak gagal di mesin yang lebih lambat:
+
+- **Aturannya:** tes yang di container ini butuh lebih dari 0,5 detik, sepersepuluh batas bawaan. Jumlahnya 10 tes (15 kasus): batas bawah di lanskap dan persegi; visibilitas; skala 2×; `amplitude`; penutupan di tepi bawah; ukuran Custom potret; jarak lembah depan; perintah `S`; profil kurva; dan dominasi (6 preset).
+- **Caranya:** opsi `{ timeout: 15000 }` di argumen kedua `it`, lewat satu konstanta `HEAVY`. Isi pengecekan tidak berubah: dibandingkan token demi token tanpa spasi, berkas tes identik dengan sebelumnya kecuali `HEAVY`. Prettier memindahkan argumen 4 tes bernama panjang ke baris baru, jadi isinya menjorok satu tab.
+- **Bukti batasnya berlaku:** dengan batas global dipaksa 300 ms (`--testTimeout=300`), ke-15 kasus `HEAVY` tetap lulus (sampai 4,6 detik), sedangkan 19 kasus lain yang lebih dari 300 ms gagal karena waktu.
+- **Yang tetap memakai batas bawaan:** 17 tes batas potret per preset (0,34–0,44 detik), MODE-01, dan `layers` (0,37–0,42 detik).
 
 **Uji mutasi.** Ada dua putaran. Semuanya dijalankan ulang pada kode akhir, terhadap tes waves saja (tanpa snapshot).
 
