@@ -94,6 +94,12 @@ const visibilityParams: Params[] = [
 	{ layers: 12, amplitude: 0, frequency: 6 }
 ];
 
+/**
+ * Time limit for the heaviest tests, which sweep many seeds, canvases and params: three times the
+ * 5 s default, so they also pass on slower machines.
+ */
+const HEAVY = { timeout: 15000 };
+
 function config(overrides: Partial<RenderConfig> = {}): RenderConfig {
 	return {
 		version: ENGINE_VERSION,
@@ -304,7 +310,7 @@ describe('waves: SVG output (ENG-01, ENG-06, EXP-02)', () => {
 		}
 	});
 
-	it('closes each wave along the bottom edge and draws nothing outside the canvas', () => {
+	it('closes each wave along the bottom edge and draws nothing outside the canvas', HEAVY, () => {
 		const wrong: string[] = [];
 		for (const seed of seeds(20)) {
 			for (const size of [...sizes, ...portraitCustoms]) {
@@ -330,41 +336,45 @@ describe('waves: SVG output (ENG-01, ENG-06, EXP-02)', () => {
 		expect(wrong).toEqual([]);
 	});
 
-	it('writes inner pieces with S only where the left-out control point mirrors the previous one', () => {
-		const wrong: string[] = [];
-		// Largest distance between a left-out control point and the mirrored one, as a share of the canvas.
-		let gap = 0;
-		for (const seed of seeds(10)) {
-			for (const size of [...presets, ...customs]) {
-				for (const params of extremes) {
-					const svg = render(config({ seed, size, params }), waves);
-					const paths = [...svg.matchAll(/ d="([^"]*)"/g)].map((m) => m[1]);
-					curves(size, seed, params).forEach((segments, band) => {
-						const last = segments.length - 1;
-						const commands = segments.map((_, j) => (j > 1 && j < last ? 'S' : 'C')).join('');
-						if (paths[band].replace(/[^CS]/g, '') !== commands) {
-							wrong.push(`seed ${seed} ${size.width}x${size.height} ${JSON.stringify(params)}`);
-						}
-						for (let j = 2; j < last; j++) {
-							const [start, c1] = segments[j];
-							const c2 = segments[j - 1][2];
-							gap = Math.max(
-								gap,
-								Math.abs(2 * start.x - c2.x - c1.x) / size.width,
-								Math.abs(2 * start.h - c2.h - c1.h) / size.height
-							);
-						}
-					});
+	it(
+		'writes inner pieces with S only where the left-out control point mirrors the previous one',
+		HEAVY,
+		() => {
+			const wrong: string[] = [];
+			// Largest distance between a left-out control point and the mirrored one, as a share of the canvas.
+			let gap = 0;
+			for (const seed of seeds(10)) {
+				for (const size of [...presets, ...customs]) {
+					for (const params of extremes) {
+						const svg = render(config({ seed, size, params }), waves);
+						const paths = [...svg.matchAll(/ d="([^"]*)"/g)].map((m) => m[1]);
+						curves(size, seed, params).forEach((segments, band) => {
+							const last = segments.length - 1;
+							const commands = segments.map((_, j) => (j > 1 && j < last ? 'S' : 'C')).join('');
+							if (paths[band].replace(/[^CS]/g, '') !== commands) {
+								wrong.push(`seed ${seed} ${size.width}x${size.height} ${JSON.stringify(params)}`);
+							}
+							for (let j = 2; j < last; j++) {
+								const [start, c1] = segments[j];
+								const c2 = segments[j - 1][2];
+								gap = Math.max(
+									gap,
+									Math.abs(2 * start.x - c2.x - c1.x) / size.width,
+									Math.abs(2 * start.h - c2.h - c1.h) / size.height
+								);
+							}
+						});
+					}
 				}
 			}
+			expect(wrong).toEqual([]);
+			expect(gap).toBeLessThan(1e-9);
 		}
-		expect(wrong).toEqual([]);
-		expect(gap).toBeLessThan(1e-9);
-	});
+	);
 });
 
 describe('waves: proportions (ENG-04, DEV-05)', () => {
-	it('scales with the canvas: twice the size gives exactly twice the geometry', () => {
+	it('scales with the canvas: twice the size gives exactly twice the geometry', HEAVY, () => {
 		for (const seed of seeds(10)) {
 			for (const size of [...presets, ...customs]) {
 				for (const params of extremes) {
@@ -456,22 +466,26 @@ describe('waves: proportions (ENG-04, DEV-05)', () => {
 		}
 	);
 
-	it('keeps the same floor and top on custom portrait sizes, 320x7680 included', () => {
+	it('keeps the same floor and top on custom portrait sizes, 320x7680 included', HEAVY, () => {
 		const wrong = portraitCustoms.flatMap((size) =>
 			outOfRange(size, `${size.width}x${size.height}`, 0.3, (s) => 0.5 * s.height)
 		);
 		expect(wrong).toEqual([]);
 	});
 
-	it('keeps the floor on landscape and square canvases, below 70% of the height and half the longer side', () => {
-		const wide = [...landscapes, ...customs].filter((size) => size.width >= size.height);
-		const wrong = wide.flatMap((size) =>
-			outOfRange(size, `${size.width}x${size.height}`, 0.3, cap, seeds(100))
-		);
-		expect(wrong).toEqual([]);
-	});
+	it(
+		'keeps the floor on landscape and square canvases, below 70% of the height and half the longer side',
+		HEAVY,
+		() => {
+			const wide = [...landscapes, ...customs].filter((size) => size.width >= size.height);
+			const wrong = wide.flatMap((size) =>
+				outOfRange(size, `${size.width}x${size.height}`, 0.3, cap, seeds(100))
+			);
+			expect(wrong).toEqual([]);
+		}
+	);
 
-	it("keeps the front wave's troughs 2% of the shorter side above the bottom edge", () => {
+	it("keeps the front wave's troughs 2% of the shorter side above the bottom edge", HEAVY, () => {
 		const wrong: string[] = [];
 		for (const size of [...sizes, ...portraitCustoms]) {
 			const clearance = 0.02 * Math.min(size.width, size.height);
@@ -511,40 +525,46 @@ describe('waves: parameters', () => {
 		}
 	});
 
-	it('amplitude grows every wave at every step and moves nothing sideways; the front swell goes evenly from 3% of the shorter side to 18%, or to 0.6 wavelengths when that is lower', () => {
-		// Largest gap from the even steps, as a share of the shorter side, and the steps where a wave
-		// does not grow or moves sideways.
-		let gap = 0;
-		const stuck: string[] = [];
-		for (const seed of seeds(20)) {
-			for (const size of [...presets, ...customs]) {
-				const unit = Math.min(size.width, size.height);
-				for (let frequency = 1; frequency <= 6; frequency++) {
-					// 3% at 0 and the top at 1: 9% at the default 0.4 up to frequency 3.
-					const top = Math.min(0.18, (0.6 * shape(size, seed, { frequency }).wavelength) / unit);
-					let previous = shape(size, seed, { amplitude: 0, frequency }).waves;
-					for (let step = 0; step <= 20; step++) {
-						const current = shape(size, seed, { amplitude: step / 20, frequency }).waves;
-						const swell = (2 * current[current.length - 1].amp) / unit;
-						gap = Math.max(gap, Math.abs(swell - (0.03 + ((top - 0.03) * step) / 20)));
-						if (step === 0) continue;
-						current.forEach((wave, i) => {
-							if (wave.amp <= previous[i].amp || wave.phase !== previous[i].phase) {
-								stuck.push(`seed ${seed} ${size.width}x${size.height} f${frequency} step ${step}`);
-							}
-						});
-						previous = current;
+	it(
+		'amplitude grows every wave at every step and moves nothing sideways; the front swell goes evenly from 3% of the shorter side to 18%, or to 0.6 wavelengths when that is lower',
+		HEAVY,
+		() => {
+			// Largest gap from the even steps, as a share of the shorter side, and the steps where a wave
+			// does not grow or moves sideways.
+			let gap = 0;
+			const stuck: string[] = [];
+			for (const seed of seeds(20)) {
+				for (const size of [...presets, ...customs]) {
+					const unit = Math.min(size.width, size.height);
+					for (let frequency = 1; frequency <= 6; frequency++) {
+						// 3% at 0 and the top at 1: 9% at the default 0.4 up to frequency 3.
+						const top = Math.min(0.18, (0.6 * shape(size, seed, { frequency }).wavelength) / unit);
+						let previous = shape(size, seed, { amplitude: 0, frequency }).waves;
+						for (let step = 0; step <= 20; step++) {
+							const current = shape(size, seed, { amplitude: step / 20, frequency }).waves;
+							const swell = (2 * current[current.length - 1].amp) / unit;
+							gap = Math.max(gap, Math.abs(swell - (0.03 + ((top - 0.03) * step) / 20)));
+							if (step === 0) continue;
+							current.forEach((wave, i) => {
+								if (wave.amp <= previous[i].amp || wave.phase !== previous[i].phase) {
+									stuck.push(
+										`seed ${seed} ${size.width}x${size.height} f${frequency} step ${step}`
+									);
+								}
+							});
+							previous = current;
+						}
 					}
+					const xs = (amplitude: number) =>
+						curves(size, seed, { amplitude }).map((c) => c.map((s) => s.map((p) => p.x)));
+					const reference = xs(0);
+					for (let step = 1; step <= 20; step++) expect(xs(step / 20)).toEqual(reference);
 				}
-				const xs = (amplitude: number) =>
-					curves(size, seed, { amplitude }).map((c) => c.map((s) => s.map((p) => p.x)));
-				const reference = xs(0);
-				for (let step = 1; step <= 20; step++) expect(xs(step / 20)).toEqual(reference);
 			}
+			expect(gap).toBeLessThan(1e-12);
+			expect(stuck).toEqual([]);
 		}
-		expect(gap).toBeLessThan(1e-12);
-		expect(stuck).toEqual([]);
-	});
+	);
 
 	it('keeps every wave at most 0.6 wavelengths from crest to trough, a limit that first binds at frequency 4', () => {
 		const steep: string[] = [];
@@ -606,46 +626,50 @@ describe('waves: parameters', () => {
 		}
 	});
 
-	it('draws the wave profile: control points between the heights of each piece, within 1% of the exact wave, no piece almost zero wide', () => {
-		// Control points past the heights of their piece's ends, as a share of the height, and the
-		// largest gap to the exact wave, as a share of its crest-to-trough height.
-		let outside = 0;
-		let error = 0;
-		// Narrowest piece, as a share of the wavelength: nodes near an edge move onto it (EDGE).
-		let narrowest = Infinity;
-		for (const seed of seeds(10)) {
-			for (const size of [...presets, ...customs]) {
-				for (const params of extremes) {
-					const geometry = shape(size, seed, params);
-					for (const wave of geometry.waves) {
-						for (const [p0, p1, p2, p3] of curve(geometry, wave, size.width)) {
-							narrowest = Math.min(narrowest, (p3.x - p0.x) / geometry.wavelength);
-							const [low, high] = [Math.min(p0.h, p3.h), Math.max(p0.h, p3.h)];
-							for (const { h } of [p1, p2]) {
-								outside = Math.max(outside, (low - h) / size.height, (h - high) / size.height);
-							}
-							for (const t of [0.25, 0.5, 0.75]) {
-								const u = 1 - t;
-								const at = (key: 'x' | 'h') =>
-									u ** 3 * p0[key] +
-									3 * u * u * t * p1[key] +
-									3 * u * t * t * p2[key] +
-									t ** 3 * p3[key];
-								const tau = (at('x') - size.width / 2) / geometry.wavelength + wave.phase;
-								const exact = wave.mid + wave.amp * profile(tau);
-								error = Math.max(error, Math.abs(at('h') - exact) / (2 * wave.amp));
+	it(
+		'draws the wave profile: control points between the heights of each piece, within 1% of the exact wave, no piece almost zero wide',
+		HEAVY,
+		() => {
+			// Control points past the heights of their piece's ends, as a share of the height, and the
+			// largest gap to the exact wave, as a share of its crest-to-trough height.
+			let outside = 0;
+			let error = 0;
+			// Narrowest piece, as a share of the wavelength: nodes near an edge move onto it (EDGE).
+			let narrowest = Infinity;
+			for (const seed of seeds(10)) {
+				for (const size of [...presets, ...customs]) {
+					for (const params of extremes) {
+						const geometry = shape(size, seed, params);
+						for (const wave of geometry.waves) {
+							for (const [p0, p1, p2, p3] of curve(geometry, wave, size.width)) {
+								narrowest = Math.min(narrowest, (p3.x - p0.x) / geometry.wavelength);
+								const [low, high] = [Math.min(p0.h, p3.h), Math.max(p0.h, p3.h)];
+								for (const { h } of [p1, p2]) {
+									outside = Math.max(outside, (low - h) / size.height, (h - high) / size.height);
+								}
+								for (const t of [0.25, 0.5, 0.75]) {
+									const u = 1 - t;
+									const at = (key: 'x' | 'h') =>
+										u ** 3 * p0[key] +
+										3 * u * u * t * p1[key] +
+										3 * u * t * t * p2[key] +
+										t ** 3 * p3[key];
+									const tau = (at('x') - size.width / 2) / geometry.wavelength + wave.phase;
+									const exact = wave.mid + wave.amp * profile(tau);
+									error = Math.max(error, Math.abs(at('h') - exact) / (2 * wave.amp));
+								}
 							}
 						}
 					}
 				}
 			}
+			expect(outside).toBeLessThan(1e-9);
+			expect(error).toBeLessThan(0.01);
+			expect(narrowest).toBeGreaterThan(0.001);
 		}
-		expect(outside).toBeLessThan(1e-9);
-		expect(error).toBeLessThan(0.01);
-		expect(narrowest).toBeGreaterThan(0.001);
-	});
+	);
 
-	it('shows every wave: at its crests it rises above every wave in front of it', () => {
+	it('shows every wave: at its crests it rises above every wave in front of it', HEAVY, () => {
 		// The thinnest step: (1 - TAPER) / (LAYERS.max - 1) of the smallest drop from the back crest to
 		// the front one, (1 - FRONT_MAX) FLOOR - AMP_MAX (1 - FADE_MIN) (1 + SHARP) of the height.
 		const share = ((1 - 0.4) / 11) * ((1 - 0.4) * 0.3 - 0.09 * (1 - 0.4) * (1 + 0.2));
@@ -671,6 +695,7 @@ describe('waves: parameters', () => {
 
 	it.each(Object.entries(representativePresets))(
 		'lets no wave cover half of the pattern at default params on %s',
+		HEAVY,
 		(_, size) => {
 			const cols = 400;
 			for (const seed of seeds(30)) {
