@@ -16,8 +16,10 @@ const CAP = 0.5;
 const CAP_HEIGHT = 0.7;
 /** Half the crest-to-trough height of the front wave at amplitude 0, as a share of the shorter side: a small ripple. */
 const AMP_MIN = 0.015;
-/** Half the crest-to-trough height of the front wave at amplitude 1, as a share of the shorter side. */
+/** Half the crest-to-trough height of the front wave at amplitude 1, as a share of the shorter side, unless STEEP is lower. */
 const AMP_MAX = 0.09;
+/** Steepest wave: crest-to-trough height at most this share of the wavelength, so high frequencies do not turn waves into flames. It narrows the amplitude range from frequency 4 on (AMP_MAX binds up to frequency 3). */
+const STEEP = 0.6;
 /** Smallest amplitude of the back wave the seed can pick, as a share of the front one: calm water in the distance. */
 const FADE_MIN = 0.4;
 /** Largest amplitude of the back wave the seed can pick, as a share of the front one. */
@@ -99,7 +101,10 @@ export function layout(width: number, height: number, params: Params, rng: () =>
 	// screen: wider screens show more waves instead of wider ones (DEV-05), up to MAX_WAVES.
 	const unit = Math.min(width, height);
 	const wavelength = Math.max(unit / Number(params.frequency), width / MAX_WAVES);
-	const frontAmp = lerp(AMP_MIN, AMP_MAX, amplitude) * unit;
+	// The steepness limit lowers the top of the amplitude range rather than cutting the slider
+	// off, so every amplitude step still changes the waves.
+	const top = Math.min(AMP_MAX, ((STEEP / 2) * wavelength) / unit);
+	const frontAmp = lerp(AMP_MIN, top, amplitude) * unit;
 	const backAmp = frontAmp * fade;
 
 	// The back wave sits between the floor and the cap: its troughs stay above FLOOR, and its

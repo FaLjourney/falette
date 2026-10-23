@@ -511,41 +511,96 @@ describe('waves: parameters', () => {
 		}
 	});
 
-	it('amplitude grows every wave, the front one evenly from a 3% to an 18% swell of the shorter side, and moves nothing sideways', () => {
+	it('amplitude grows every wave at every step and moves nothing sideways; the front swell goes evenly from 3% of the shorter side to 18%, or to 0.6 wavelengths when that is lower', () => {
+		// Largest gap from the even steps, as a share of the shorter side, and the steps where a wave
+		// does not grow or moves sideways.
+		let gap = 0;
+		const stuck: string[] = [];
 		for (const seed of seeds(20)) {
 			for (const size of [...presets, ...customs]) {
 				const unit = Math.min(size.width, size.height);
-				const swell = (amplitude: number) => {
-					const list = shape(size, seed, { amplitude }).waves;
-					return (2 * list[list.length - 1].amp) / unit;
-				};
-				// 3% at 0, 9% at the default 0.4 and 18% at 1, in even steps.
-				for (let step = 0; step <= 20; step++) {
-					expect(swell(step / 20)).toBeCloseTo(0.03 + (0.15 * step) / 20, 12);
+				for (let frequency = 1; frequency <= 6; frequency++) {
+					// 3% at 0 and the top at 1: 9% at the default 0.4 up to frequency 3.
+					const top = Math.min(0.18, (0.6 * shape(size, seed, { frequency }).wavelength) / unit);
+					let previous = shape(size, seed, { amplitude: 0, frequency }).waves;
+					for (let step = 0; step <= 20; step++) {
+						const current = shape(size, seed, { amplitude: step / 20, frequency }).waves;
+						const swell = (2 * current[current.length - 1].amp) / unit;
+						gap = Math.max(gap, Math.abs(swell - (0.03 + ((top - 0.03) * step) / 20)));
+						if (step === 0) continue;
+						current.forEach((wave, i) => {
+							if (wave.amp <= previous[i].amp || wave.phase !== previous[i].phase) {
+								stuck.push(`seed ${seed} ${size.width}x${size.height} f${frequency} step ${step}`);
+							}
+						});
+						previous = current;
+					}
 				}
 				const xs = (amplitude: number) =>
 					curves(size, seed, { amplitude }).map((c) => c.map((s) => s.map((p) => p.x)));
 				const reference = xs(0);
-				let previous = shape(size, seed, { amplitude: 0 }).waves;
-				for (let step = 1; step <= 20; step++) {
-					const current = shape(size, seed, { amplitude: step / 20 }).waves;
-					current.forEach((wave, i) => {
-						expect(wave.amp).toBeGreaterThan(previous[i].amp);
-						expect(wave.phase).toBe(previous[i].phase);
-					});
-					expect(xs(step / 20)).toEqual(reference);
-					previous = current;
+				for (let step = 1; step <= 20; step++) expect(xs(step / 20)).toEqual(reference);
+			}
+		}
+		expect(gap).toBeLessThan(1e-12);
+		expect(stuck).toEqual([]);
+	});
+
+	it('keeps every wave at most 0.6 wavelengths from crest to trough, a limit that first binds at frequency 4', () => {
+		const steep: string[] = [];
+		for (const size of [...sizes, ...portraitCustoms]) {
+			for (const seed of seeds(20)) {
+				for (let frequency = 1; frequency <= 6; frequency++) {
+					for (let step = 0; step <= 20; step++) {
+						const { wavelength, waves: list } = shape(size, seed, {
+							amplitude: step / 20,
+							frequency
+						});
+						for (const wave of list) {
+							if (2 * wave.amp > 0.6 * wavelength * (1 + 1e-12)) {
+								steep.push(`seed ${seed} ${size.width}x${size.height} f${frequency}: ${wave.amp}`);
+							}
+						}
+					}
+				}
+			}
+		}
+		expect(steep).toEqual([]);
+		// At amplitude 1 the front wave reaches the limit from frequency 4 on: 15%, 12% and 10% of the
+		// shorter side. Up to frequency 3 it stays at 18%, below the limit.
+		for (const size of presets) {
+			const unit = Math.min(size.width, size.height);
+			for (let frequency = 1; frequency <= 6; frequency++) {
+				const { wavelength, waves: list } = shape(size, '42', { amplitude: 1, frequency });
+				const swell = 2 * list[list.length - 1].amp;
+				if (frequency <= 3) {
+					expect(swell / unit).toBeCloseTo(0.18, 12);
+					expect(swell).toBeLessThan(0.6 * wavelength);
+				} else {
+					expect(swell / wavelength).toBeCloseTo(0.6, 12);
+					expect(swell / unit).toBeCloseTo(0.6 / frequency, 12);
 				}
 			}
 		}
 	});
 
-	it('frequency changes the wavelength and nothing else', () => {
+	it('frequency 1 to 3 changes the wavelength and nothing else; 4 to 6 also lower the swell, never the ripple', () => {
 		for (const seed of seeds(20)) {
 			for (const size of [...presets, ...customs]) {
-				const reference = shape(size, seed, { frequency: 1 }).waves;
-				for (let frequency = 2; frequency <= 6; frequency++) {
-					expect(shape(size, seed, { frequency }).waves).toEqual(reference);
+				for (const amplitude of [0, 0.4, 1]) {
+					const reference = shape(size, seed, { amplitude, frequency: 1 }).waves;
+					for (let frequency = 2; frequency <= 6; frequency++) {
+						const current = shape(size, seed, { amplitude, frequency }).waves;
+						if (frequency <= 3 || amplitude === 0) {
+							expect(current).toEqual(reference);
+						} else {
+							current.forEach((wave, i) => {
+								expect(wave.band).toBe(reference[i].band);
+								expect(wave.phase).toBe(reference[i].phase);
+								expect(wave.amp).toBeLessThanOrEqual(reference[i].amp);
+							});
+						}
+					}
 				}
 			}
 		}
