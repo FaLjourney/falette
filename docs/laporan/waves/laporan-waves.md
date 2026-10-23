@@ -13,6 +13,8 @@ Draft PR: https://github.com/FaLjourney/falette/pull/8 (branch `claude/waves-pat
 
 Satu solusi ENG-07 ditambahkan setelah pengukuran: **A, batas 48 gelombang selebar layar** (lihat [Batas 48 gelombang](#batas-48-gelombang-eng-07)).
 
+Setelah meninjau pratinjau, FaL meminta **batas kecuraman**: tinggi gelombang dari puncak ke lembah paling banyak sekitar 0,6× panjang gelombangnya, tanpa mengubah `frequency` 1–3. Semua angka di laporan ini sudah mengikuti revisi itu kecuali bila disebut lain; rinciannya ada di [Revisi setelah pratinjau](#revisi-setelah-pratinjau-batas-kecuraman).
+
 ---
 
 ## Yang berubah
@@ -20,12 +22,14 @@ Satu solusi ENG-07 ditambahkan setelah pengukuran: **A, batas 48 gelombang seleb
 | Commit | File | Isi | ID |
 | --- | --- | --- | --- |
 | 1 `2cde270` | `src/lib/patterns/waves.ts` (baru) | Modul pola: skema persis katalog, `colorCount = layers`, `layout()` murni (garis tengah, amplitudo, dan fase tiap gelombang dari ukuran, parameter, dan 18 tarikan PRNG), `curve()` (kurva Bézier per seperempat gelombang, dipotong di tepi kanvas), dan path dengan `S` untuk potongan tengah. 15 konstanta. | PAT-01, PAT-02, PAT-04, PAT-09, ENG-01–ENG-07, ENG-11, MODE-01, DEV-05 |
-| 1 | `tests/patterns/waves.test.ts` (baru) | 61 tes (69 setelah commit 5), rinciannya di bawah. | PAT-10, ENG-07 |
+| 1 | `tests/patterns/waves.test.ts` (baru) | 61 tes (69 setelah commit 5, 70 setelah commit 7), rinciannya di bawah. | PAT-10, ENG-07 |
 | 2 `20019b6` | `tests/fixtures/snapshot-patterns.ts`, `tests/engine/__snapshots__/waves/` | `waves` masuk snapshot: 3 seed bersama × 6 preset × Terang dan Gelap (36 file), ditambah 10 kasus khusus di `ios-63` dan `mba-13` Terang (20 file). | ENG-08 |
 | 3 `4f2c92c` | `tests/patterns/waves.test.ts` | Tes batas 48 gelombang kini mencakup ke-28 preset Lampiran A. Sebelumnya lima preset laptop dan desktop terlewat, temuan saat memeriksa laporan ini. | ENG-07, DEV-05 |
 | 4 `f21caf5` | `docs/laporan/waves/` | Laporan ini dan tiga pratinjau PNG. | PAT-10, ENG-07 |
 | 5 `3b2e027` | `src/lib/patterns/waves.ts`, `tests/patterns/waves.test.ts` | Setelah verifikasi independen: 8 tes rng tiruan, cek `amplitude` di setiap langkah, komentar yang dibetulkan, serta nama `wavelength`, `frontAmp`, dan `backAmp`. Hasil SVG tidak berubah. | PAT-04, PAT-10 |
-| 6 | `docs/laporan/waves/laporan-waves.md` | Laporan dibetulkan setelah verifikasi independen (bagian terakhir). | |
+| 6 `3dea333` | `docs/laporan/waves/laporan-waves.md` | Laporan dibetulkan setelah verifikasi independen. | |
+| 7 `018ab2c` | `src/lib/patterns/waves.ts`, `tests/patterns/waves.test.ts`, 4 snapshot waves | Revisi: batas kecuraman `STEEP` 0,6 (konstanta ke-16), dua tes yang berubah karena kebutuhannya berubah, satu tes baru, dan 4 snapshot `frequency` 6. | PAT-10, ENG-08 |
+| 8 | `docs/laporan/waves/` | Laporan, `parameter.png`, dan gambar baru `kecuraman-sebelum-sesudah.png` untuk revisi. | PAT-10 |
 
 Yang tidak disentuh:
 - Engine, palet, arcs, hills, PRD, AGENTS.md, dan katalog.
@@ -52,8 +56,8 @@ Versi engine tetap 1. Snapshot mock, arcs, dan hills tidak berubah. Tanda ✅ di
 | Parameter | Arti |
 | --- | --- |
 | `layers` 3–12 (6) | Jumlah lapisan. Lapisan belakang dan depan tetap; nilai ini hanya menyisipkan lapisan di antaranya. |
-| `amplitude` 0–1 (0,4) | Tinggi gelombang depan dari puncak ke lembah: 3% sisi terpendek di nilai 0 (riak kecil), 9% di nilai awal, dan 18% di nilai 1. Lapisan belakang 40–90% dari itu, dipilih seed. Garis tengah ikut menyesuaikan sedikit supaya lembah belakang tetap di atas 30% dan lembah depan tetap di atas tepi bawah. Tidak ada yang bergeser ke samping. |
-| `frequency` 1–6 (2) | Jumlah gelombang selebar sisi terpendek layar, maksimal 48 gelombang selebar layar. Hanya panjang gelombang yang berubah. |
+| `amplitude` 0–1 (0,4) | Tinggi gelombang depan dari puncak ke lembah naik merata dari 3% sisi terpendek di nilai 0 (riak kecil) sampai batas atasnya di nilai 1. Batas atas itu 18% sisi terpendek, atau 0,6× panjang gelombang bila lebih kecil: di `frequency` 1–3 tetap 18% (9% di nilai awal), di `frequency` 4 / 5 / 6 menjadi 15% / 12% / 10%. Lapisan belakang 40–90% dari gelombang depan, dipilih seed. Garis tengah ikut menyesuaikan sedikit supaya lembah belakang tetap di atas 30% dan lembah depan tetap di atas tepi bawah. Tidak ada yang bergeser ke samping. |
+| `frequency` 1–6 (2) | Jumlah gelombang selebar sisi terpendek layar, maksimal 48 gelombang selebar layar. Di `frequency` 1–3 hanya panjang gelombang yang berubah. Di `frequency` 4–6, batas kecuraman juga menurunkan batas atas `amplitude`. |
 
 **DEV-05.** Panjang gelombang dan amplitudo sama-sama mengikuti sisi terpendek, jadi satu gelombang berbentuk sama di semua layar. Layar yang lebih lebar menampilkan lebih banyak gelombang, bukan gelombang yang lebih lebar. Fase diukur dari tengah layar, jadi gelombang tambahan muncul di kedua sisi.
 
@@ -119,7 +123,7 @@ Sekitar 82% waktunya habis untuk memformat angka dan menyusun string path. Sesua
 | --- | --- |
 | `npm run check` | ✅ 0 error, 0 peringatan |
 | `npm run lint` | ✅ bersih |
-| `npm test` (unit) | ✅ 405 lulus: 69 tes waves, 56 snapshot waves, dan 280 tes lama yang tidak berubah |
+| `npm test` (unit) | ✅ 406 lulus: 70 tes waves, 56 snapshot waves, dan 280 tes lama yang tidak berubah |
 | `npm test` (Playwright, `tests/home.e2e.ts`) | ✅ 1 lulus. Di container, Chromium bawaan disambungkan lewat config sementara di luar repo |
 | `npm run build` | ✅ berhasil |
 
@@ -145,8 +149,9 @@ Isi tes waves:
   - Lembah depan minimal 2% sisi terpendek di atas tepi bawah.
 - **Parameter:**
   - `layers` mempertahankan gelombang belakang dan depan.
-  - `amplitude` membesarkan setiap gelombang tanpa menggeser ke samping. Gelombang depan naik merata dari 3% ke 18% sisi terpendek, dengan 9% di nilai awal.
-  - `frequency` hanya mengubah panjang gelombang.
+  - `amplitude` membesarkan setiap gelombang di setiap langkah, di semua `frequency`, tanpa menggeser ke samping. Gelombang depan naik merata dari 3% sisi terpendek sampai 18%, atau sampai 0,6× panjang gelombang bila lebih kecil.
+  - Setiap gelombang paling tinggi 0,6× panjang gelombangnya, di semua kanvas, seed, `frequency`, dan langkah `amplitude`. Di `amplitude` 1, batas ini tercapai tepat mulai `frequency` 4 (15% / 12% / 10% sisi terpendek); sampai `frequency` 3 gelombang depan tetap 18%.
+  - `frequency` 1–3 hanya mengubah panjang gelombang. `frequency` 4–6 juga boleh mengecilkan gelombang, tapi fase dan urutan lapisan tetap, dan `amplitude` 0 tidak berubah.
   - Titik kendali tetap di antara tinggi ujung potongannya, kurva ≤ 1% dari gelombang eksak, dan tidak ada potongan yang lebih sempit dari 0,001 gelombang.
 - **Visibilitas:** di puncaknya, setiap lapisan lebih tinggi dari semua lapisan di depannya minimal (1 − `TAPER`)/11 × ((1 − `FRONT_MAX`)·0,3 − `AMP_MAX`·(1 − `FADE_MIN`)·(1 + `SHARP`)) = **0,63% tinggi kanvas**. Dicek di seed 1–300.
 - **Dominasi:** di parameter awal, seed 1–30, dan 6 preset, tidak ada lapisan di atas 50% luas pola.
@@ -166,6 +171,8 @@ Isi tes waves:
 - **ENG-07:** desk-5k dan strip 7680×320 di parameter maksimum, median < 50 ms.
 
 Tes waves berjalan sekitar 20 detik (hills sekitar 10 detik). Tes terlama 2,4 detik, sekitar setengah batas 5 detik per tes. Di mesin yang sedang sibuk, tes waves dan hills sama-sama bisa melewati batas itu.
+
+Di container baru yang dipakai untuk revisi kecuraman, mesinnya lebih lambat. Tes waves berjalan sekitar 28 detik, dan tes terlamanya 3,9 detik: batas bawah di lanskap dan persegi, yang tidak berubah oleh revisi. Tes yang sama di hills berjalan 1,1 detik di container itu. Marginnya kini sekitar 1,3×, jadi tes ini yang paling dulu kena batas 5 detik di mesin lambat.
 
 **Uji mutasi.** Ada dua putaran. Semuanya dijalankan ulang pada kode akhir, terhadap tes waves saja (tanpa snapshot).
 
@@ -194,6 +201,8 @@ Putaran kedua: 41 mutasi baru dari pemeriksa independen.
 
 **Hasil akhir:** 52 dari 54 mutasi tertangkap oleh tes waves saja. Dua sisanya setara, karena SVG-nya identik dengan kode asli: `k / 4 <= end` di loop titik, dan `lerp` yang ditulis sebagai a + (b − a)·t.
 
+Putaran ketiga, untuk revisi kecuraman: 6 mutasi baru dan 3 mutasi `amplitude` lama, yang diulang karena baris `amplitude` berubah. Semuanya tertangkap (rinciannya di [Revisi setelah pratinjau](#revisi-setelah-pratinjau-batas-kecuraman)).
+
 ## Variasi seed (PAT-10)
 
 Metriknya sama dengan hills (grid 40 kolom, seed 1–30, 435 pasangan), diukur pada kurva yang tergambar. Batasnya juga sama dengan hills: median ≥ 0,45, pasangan termirip ≥ 0,1, dan maksimal 2% (8 pasangan) di bawah 0,2.
@@ -219,8 +228,11 @@ Metriknya sama dengan hills (grid 40 kolom, seed 1–30, 435 pasangan), diukur p
 | `amplitude` 0 | 0,544–0,657 | 0,063–0,108 | 6–15 |
 | `layers` 12 | 0,670–0,725 | ≥ 0,284 | 0 |
 | `amplitude` 1 | 0,537–0,649 | ≥ 0,230 | 0 |
+| `frequency` 4 (sesudah revisi) | 0,523–0,627 | 0,113–0,205 | 0–6 |
+| `frequency` 5 (sesudah revisi) | 0,522–0,635 | 0,098–0,178 | 2–7 |
+| `frequency` 6 (sesudah revisi) | 0,524–0,643 | 0,093–0,161 | 1–9 |
 
-Metrik grid 40 kolom hampir tidak bisa melihat `frequency`. Hasil `frequency` 6 hampir sama dengan `frequency` 2, karena untuk pola yang berulang teratur, kolom-kolomnya hanya bertukar urutan. `frequency` bukan sumbu seed, jadi efeknya dites terpisah.
+Metrik grid 40 kolom hampir tidak bisa melihat panjang gelombang, karena untuk pola yang berulang teratur, kolom-kolomnya hanya bertukar urutan. Sebelum revisi, hasil `frequency` 4–6 karena itu hampir sama dengan `frequency` 2. Sesudah revisi, `frequency` 4–6 juga mengecilkan gelombang, jadi variasinya melemah seperti di `amplitude` kecil. Penjelasannya ada di [Revisi setelah pratinjau](#revisi-setelah-pratinjau-batas-kecuraman).
 
 ## Visibilitas dan dominasi
 
@@ -253,7 +265,7 @@ Dengan 3 lapisan, rata-ratanya sudah 33% per lapisan, jadi `layers` 3 kucatat se
 | Custom 7680×320, nilai awal | 0,65 ms | 3,5 ms | 2,2–2,3 / 7,9–14,2 ms | 3,5–3,6 / 6,7–10,1 ms | 34,7 KB | 35,1 KB |
 | Custom 7680×320, maksimum | 1,7 ms | 8,0 ms | 5,3–6,8 / 8,8–19,3 ms | 6,9–8,4 / 24,5–28,4 ms | 68,8 KB | 69,8 KB |
 
-1 KB = 1000 B. Angka byte dari skrip pratinjau: 3.618 B dan 17.447 B untuk desk-5k seed 42.
+1 KB = 1000 B. Angka byte dari skrip pratinjau: 3.618 B dan 17.447 B untuk desk-5k seed 42. Tabel ini diukur sebelum revisi kecuraman; angka sesudahnya ada di [Revisi setelah pratinjau](#revisi-setelah-pratinjau-batas-kecuraman). Hanya baris desk-5k maksimum yang keluarannya berubah. Ketiga baris lain identik byte demi byte, termasuk Custom 7680×320 maksimum, karena di sana batas 48 gelombang membuat batas kecuraman tidak aktif.
 
 - **Kesimpulan:** semua angka di tabel jauh di bawah batas ENG-07. Satu kelompok putaran anomali (lihat di bawah) sempat melewatinya.
 - **Satu render per frame** (seperti slider, 300 frame), di 7680×320 maksimum dengan CPU 6× lebih lambat: median 7,9–9,0 ms dan terlama 20–24 ms. Hills di ukuran yang sama: median 3,2–3,6 ms dan terlama 15–18 ms.
@@ -264,7 +276,7 @@ Dengan 3 lapisan, rata-ratanya sudah 33% per lapisan, jadi `layers` 3 kucatat se
   - Tiga putaran yang direkam dengan trace Chromium tidak punya render di atas 36 ms, jadi lonjakan itu tidak bisa diperiksa dengan trace.
   - Selama pengukuran, mesin virtual container kehilangan sekitar 4% waktu CPU ke host (steal time). Penyebab pasti lonjakan tidak kutemukan. Ukuran file dan median di kelompok itu sama dengan putaran normal.
 - **Metode:** angka Node diambil dari `npm run preview:pattern -- waves` dan skrip ukur di luar repo. Angka Chromium memakai bundel engine + waves yang di-minify, dengan `Emulation.setCPUThrottlingRate`.
-- **Ukuran kode** (rolldown, minify, sama untuk keduanya): engine + waves 6.168 B atau 3.128 B gzip; engine + hills 6.312 B atau 3.218 B gzip.
+- **Ukuran kode** (rolldown, minify, sama untuk keduanya): engine + waves 6.199 B atau 3.142 B gzip sesudah revisi (sebelumnya 6.168 B atau 3.128 B gzip); engine + hills 6.312 B atau 3.218 B gzip.
   - Angka hills ini berbeda dari laporan hills (6,5 KB atau 3,3 KB gzip), karena metode ukurnya berbeda. Kode hills sendiri sama.
   - JavaScript awal Home dan Create belum berubah, karena belum ada rute yang memuat pola.
 - **Sumber angka:** container dan Chromium headless, bukan perangkat asli.
@@ -275,7 +287,10 @@ Semua pratinjau dibuat dengan `npm run preview:pattern -- waves`, memakai palet 
 
 - [pratinjau-seed-42.png](pratinjau-seed-42.png): seed 42 di 6 preset perwakilan, Terang dan Gelap.
 - [variasi-seed.png](variasi-seed.png): seed 1–8 di and-fhd20 dan mba-13, Terang dan Gelap.
-- [parameter.png](parameter.png): and-fhd20 seed 42 dengan `layers` 3 / 6 / 12, `amplitude` 0 / 0,4 / 1, dan `frequency` 1 / 2 / 6, Terang dan Gelap.
+- [parameter.png](parameter.png): and-fhd20 seed 42 dengan `layers` 3 / 6 / 12, `amplitude` 0 / 0,4 / 1, dan `frequency` 1 / 2 / 6, Terang dan Gelap. Dibuat ulang sesudah revisi kecuraman; yang berubah hanya kolom `frequency` 6.
+- [kecuraman-sebelum-sesudah.png](kecuraman-sebelum-sesudah.png): seed 42 dengan `amplitude` 1 dan `frequency` 4 / 5 / 6 di and-fhd20 dan mba-13, sebelum dan sesudah revisi, Terang.
+
+`pratinjau-seed-42.png` dan `variasi-seed.png` dibuat ulang sesudah revisi dan identik byte demi byte dengan sebelumnya, karena keduanya memakai `frequency` 2.
 
 File SVG-nya tidak di-commit; skrip menulisnya ke `previews/waves/`, yang di-gitignore.
 
@@ -315,3 +330,96 @@ Setiap temuan lalu diuji ulang oleh pemeriksa kedua yang mencoba membantahnya. T
 | "Semua jauh di bawah batas ENG-07" bertentangan dengan paragraf anomali | Dibatasi ke angka di tabel |
 | Baris dominasi "`layers` 12, `amplitude` 0 / 1, `frequency` 1 / 6" terbaca sebagai gabungan | Dipisah: satu per satu, dan gabungan (paling banyak 41,4%) |
 | Beberapa kalimat lain kurang tepat: `S` di "potongan tengah", "garis tengah depan dari tepat di atas tepi bawah", "penyimpangan kecil", "jauh di bawah batas 5 detik", "18 tarikan di semua parameter", daftar seed `layers` 3, dan ukuran hills yang berbeda dari laporan hills | Dibetulkan atau diperjelas |
+
+## Revisi setelah pratinjau: batas kecuraman
+
+**Alasan dari FaL.** Di `amplitude` dan `frequency` yang sama-sama tinggi, gelombang jadi runcing seperti api, misalnya di snapshot (12; 1; 6) di mba-13. Permintaannya:
+
+- Tinggi gelombang dari puncak ke lembah paling banyak sekitar 0,6× panjang gelombangnya.
+- `frequency` 1–3 tidak boleh berubah.
+- Slider `amplitude` tetap berpengaruh di seluruh rentangnya: rentangnya menyempit di `frequency` tinggi, bukan mentok.
+
+**Yang berubah di kode** (commit 7 `018ab2c`). Satu konstanta baru, `STEEP = 0.6`, dan satu baris di `layout()`:
+
+- Batas atas amplitudo = min(`AMP_MAX`, `STEEP` / 2 × panjang gelombang / sisi terpendek).
+- Amplitudo depan = lerp(`AMP_MIN`, batas atas, `amplitude`) × sisi terpendek.
+- Jadi yang turun adalah ujung atas rentang, bukan amplitudonya yang dipotong. Setiap langkah slider tetap mengubah gelombang, dan `amplitude` 0 tetap riak 3%.
+- Lapisan belakang selalu lebih kecil dari lapisan depan, jadi batas ini berlaku untuk semua lapisan.
+- Sampai `frequency` 3 batas atasnya tetap `AMP_MAX`, sehingga hitungannya persis sama dengan sebelumnya. Dicek pada 57.600 render (29 kanvas, seed 1–40, `layers` 3 / 6 / 12, `amplitude` 0 / 0,05 / 0,4 / 0,65 / 1, `frequency` 1–3): semuanya identik byte demi byte dengan sebelum revisi.
+
+Tinggi gelombang depan dari puncak ke lembah, dibagi panjang gelombang (dan sebagai bagian dari sisi terpendek), di preset mana pun:
+
+| `frequency` | `amplitude` 0 | `amplitude` 0,4, sebelum → sesudah | `amplitude` 1, sebelum → sesudah |
+| --- | --- | --- | --- |
+| 1 | 0,03 (3%) | 0,09 (9%), tetap | 0,18 (18%), tetap |
+| 2 | 0,06 (3%) | 0,18 (9%), tetap | 0,36 (18%), tetap |
+| 3 | 0,09 (3%) | 0,27 (9%), tetap | 0,54 (18%), tetap |
+| 4 | 0,12 (3%) | 0,36 → 0,312 (9% → 7,8%) | 0,72 → 0,60 (18% → 15%) |
+| 5 | 0,15 (3%) | 0,45 → 0,33 (9% → 6,6%) | 0,90 → 0,60 (18% → 12%) |
+| 6 | 0,18 (3%) | 0,54 → 0,348 (9% → 5,8%) | 1,08 → 0,60 (18% → 10%) |
+
+Di strip Custom tempat batas 48 gelombang aktif, panjang gelombangnya lebih panjang, jadi batas kecuraman lebih jarang aktif. Di 7680×320 `frequency` 6, misalnya, batas ini tidak aktif sama sekali.
+
+**Tes yang diubah.** Keduanya berubah karena kebutuhannya berubah, bukan supaya tes lulus:
+
+| Tes | Sebelum | Sesudah | Alasan |
+| --- | --- | --- | --- |
+| "frequency changes the wavelength and nothing else" | `frequency` 2–6 menghasilkan lapisan yang sama persis dengan `frequency` 1 | `frequency` 2–3 tetap sama persis. Di `frequency` 4–6, fase dan urutan lapisan tetap, amplitudo boleh lebih kecil, dan `amplitude` 0 tetap sama persis | `frequency` 4–6 kini memang mengecilkan gelombang |
+| "amplitude grows every wave…" | Naik merata dari 3% ke 18%, hanya di `frequency` 2 | Naik merata dari 3% ke min(18%, 0,6× panjang gelombang), dan setiap lapisan membesar di setiap langkah, di `frequency` 1–6 | Batas atas berubah. Cakupan tes ini juga lebih luas, jadi lebih ketat, bukan lebih longgar |
+
+**Tes baru:** "keeps every wave at most 0.6 wavelengths from crest to trough". Batas ini dicek di semua kanvas tes, seed 1–20, `frequency` 1–6, dan setiap langkah `amplitude`. Tes ini juga memastikan batasnya tercapai tepat di `amplitude` 1 mulai `frequency` 4 (15% / 12% / 10%), dan sampai `frequency` 3 gelombang depan tetap 18%.
+
+**Uji mutasi untuk revisi ini.** Semuanya tertangkap tes waves:
+
+1. `STEEP` 0,7.
+2. `STEEP` 0,5, yang ikut mengubah `frequency` 3.
+3. Amplitudo dipotong di batas, bukan rentangnya disempitkan, sehingga slider mentok.
+4. Batas dihitung dari `frequency`, tanpa memperhitungkan batas 48 gelombang.
+5. Batas tanpa pembagian 2, yaitu 1,2× panjang gelombang.
+6. Batas hanya dipasang di lapisan belakang.
+
+Tiga mutasi `amplitude` lama (`amplitude`², `amplitude`^1,5, dan `AMP_MAX` 0,08) diulang karena barisnya berubah, dan ketiganya tetap tertangkap.
+
+**Snapshot.** Tepat 4 dari 56 snapshot waves berubah, semuanya `frequency` 6 di varian Terang:
+- `ios-63-42_frequency-6.svg`
+- `ios-63-42_layers-12_amplitude-1_frequency-6.svg`
+- `mba-13-42_frequency-6.svg`
+- `mba-13-42_layers-12_amplitude-1_frequency-6.svg`
+
+Dengan tes yang sudah diubah dan sebelum snapshot diperbarui, `CI=true npx vitest run` gagal tepat di 4 kasus itu, dan 402 tes lain lulus. Snapshot mock, arcs, dan hills tidak berubah.
+
+**Dampak lain:**
+
+- **Batas potret:** semua angka di tabel batas potret sama sampai 3 desimal.
+- **Visibilitas:** langkah puncak terkecil dan ketebalan tertipis sama.
+- **Dominasi:** tetap 0 seed dengan lapisan di atas 50%.
+  - Di `frequency` 4 dan 5, pada `amplitude` 0,4 dan 1, lapisan terbesar 38,8–39,2%.
+  - Di `frequency` 6, lapisan terbesar 38,5%.
+  - Gabungan `layers` 12 × `amplitude` 0 / 1 × `frequency` 1 / 6 tetap paling banyak 41,4%.
+- **Variasi seed** di parameter awal (`frequency` 2) tidak berubah. Di `frequency` 4–6 dengan `amplitude` 0,4, variasinya melemah, karena gelombangnya kini lebih kecil. Di `frequency` 6, gelombang depan 5,8% sisi terpendek, setara `amplitude` sekitar 0,19 di `frequency` 2.
+
+| `frequency` (`amplitude` 0,4) | Median, sebelum → sesudah | Termirip terendah, sebelum → sesudah | Paling banyak di bawah 0,2, sebelum → sesudah |
+| --- | --- | --- | --- |
+| 4 | 0,523–0,620 → 0,523–0,627 | 0,122 → 0,113 | 3 → 6 |
+| 5 | 0,522–0,621 → 0,522–0,635 | 0,132 → 0,098 (and-fhd20) | 4 → 7 |
+| 6 | 0,520–0,621 → 0,524–0,643 | 0,134 → 0,093 (and-fhd20) | 3 → 9 (and-fhd20 dan ios-63) |
+
+Batas variasi hills hanya dites di parameter awal, jadi tidak ada tes yang gagal. Tapi kalau batas itu dipakai di `frequency` 5–6, pasangan termirip di and-fhd20 jatuh sedikit di bawah 0,1, dan di `frequency` 6 ada 9 pasangan di bawah 0,2 di dua ponsel (batasnya 8). Di `frequency` 6 dengan `amplitude` 1, variasinya tetap lulus (termirip ≥ 0,139, paling banyak 2 pasangan di bawah 0,2). Ini kucatat sebagai titik lemah, sama seperti `amplitude` 0.
+
+**Waktu render dan ukuran sesudah revisi.** Diukur di container baru, yang lebih lambat dari container pengukuran awal: median hills di 7680×320 maksimum dengan CPU 6× naik dari 3,2–3,6 ms ke 4,6–5,3 ms.
+
+- **desk-5k maksimum:**
+  - SVG seed 42: 17.407 B (sebelumnya 17.447 B), terbesar dari seed 1–200: 17.847 B. Keduanya tetap 17,4 KB dan 17,8 KB.
+  - Node: median 0,56 ms, terlama dari seed 1–200 2,4 ms.
+  - Chromium CPU 4×: median 2,5–3,5 ms, terlama 17–30 ms. CPU 6×: median 2,3–2,9 ms, terlama 9,1–9,7 ms.
+- **Custom 7680×320 maksimum:** keluarannya identik dengan sebelum revisi (68.766 B). Di 8 putaran Chromium CPU 6× di container baru, sekitar 2.700 render:
+  - Median 9–13 ms.
+  - **Satu render mencapai 104 ms** (seed 105, putaran pertama, saat render per seed). Di 7 putaran lain, termasuk 3 putaran satu render per frame dengan hills sebagai kontrol, render terlamanya 30–48 ms.
+  - Ini sama dengan anomali yang tercatat di bagian waktu render: jarang, tidak terulang, dan tidak berhubungan dengan revisi ini, karena keluarannya tidak berubah. Tetap kucatat, karena satu render itu melewati batas ponsel ENG-07.
+- **Ukuran kode:** engine + waves 6.199 B atau 3.142 B gzip (sebelumnya 6.168 B atau 3.128 B).
+
+**Pratinjau.** `parameter.png` dibuat ulang dan hanya berubah di kolom `frequency` 6. Gambar baru [kecuraman-sebelum-sesudah.png](kecuraman-sebelum-sesudah.png) menunjukkan seed 42 di `amplitude` 1 dengan `frequency` 4 / 5 / 6, di and-fhd20 dan mba-13, sebelum dan sesudah revisi.
+
+**Hasil uji sesudah revisi.** `npm run check` 0 error, `npm run lint` bersih, `npm test` 406 tes unit dan 1 tes Playwright lulus, dan `npm run build` berhasil.
+
+**Verifikasi.** Revisi ini kuperiksa sendiri dengan skrip terpisah dan uji mutasi di atas. Pemeriksaan independen dengan banyak pemeriksa, seperti di bagian sebelumnya, tidak diulang untuk revisi ini.
