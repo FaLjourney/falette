@@ -1,10 +1,11 @@
 import type { Params, PatternModule, Variant } from '../../src/lib/engine/types';
 import arcs from '../../src/lib/patterns/arcs';
 import hills from '../../src/lib/patterns/hills';
+import waves from '../../src/lib/patterns/waves';
 import { mockPattern } from './mock-pattern';
 
 /** Patterns covered by the ENG-08 snapshot test. */
-export const snapshotPatterns: PatternModule[] = [mockPattern, arcs, hills];
+export const snapshotPatterns: PatternModule[] = [mockPattern, arcs, hills, waves];
 
 /** Fixed seeds shared by all patterns: numeric and word seeds take the same text-hash path. */
 export const snapshotSeeds = ['1', '42', 'senja-teduh-42'];
@@ -46,6 +47,21 @@ export const snapshotExtraCases: Record<string, SnapshotCase[]> = {
 		{ seed: '42', params: { softness: 1 } },
 		{ seed: '42', params: { layers: 3, height: 0, softness: 0 } },
 		{ seed: '42', params: { layers: 10, height: 1, softness: 1 } }
+	],
+	waves: [
+		// The shared seeds all lean one way. '603' leans the other way, with a high stack, a high front
+		// wave, waves crowding to the front and a calm back wave; '965' leans further the first way,
+		// with a low stack, a low front wave, waves crowding to the back and a lively back wave.
+		{ seed: '603', params: {} },
+		{ seed: '965', params: {} },
+		{ seed: '42', params: { layers: 3 } },
+		{ seed: '42', params: { layers: 12 } },
+		{ seed: '42', params: { amplitude: 0 } },
+		{ seed: '42', params: { amplitude: 1 } },
+		{ seed: '42', params: { frequency: 1 } },
+		{ seed: '42', params: { frequency: 6 } },
+		{ seed: '42', params: { layers: 3, amplitude: 0, frequency: 1 } },
+		{ seed: '42', params: { layers: 12, amplitude: 1, frequency: 6 } }
 	]
 };
 
