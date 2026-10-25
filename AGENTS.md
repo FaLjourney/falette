@@ -81,6 +81,7 @@ src/
     engine/       render(), PRNG, warna OKLCH, utilitas SVG (tanpa Svelte)
     patterns/     satu file per pola (<id>.ts) dan daftar ringan: ID, nama, kategori
     export/       ekspor PNG dan SVG, kode SVG Rapi/Ringkas, nama file, dan worker PNG (tanpa Svelte)
+    share/        link berbagi: menulis dan membaca hash URL (Lampiran B) (tanpa Svelte)
     presets/      presets.json (Lampiran A) dan 5 templat overlay
     i18n/         en.json, id.json
     components/   komponen Svelte
