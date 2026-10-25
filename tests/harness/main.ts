@@ -399,7 +399,7 @@ function cell(row: HTMLTableRowElement, text: string, tag: 'td' | 'th' = 'td'): 
 async function runDevice(): Promise<void> {
 	const status = document.getElementById('status');
 	const results = document.getElementById('results');
-	const json = document.getElementById('json');
+	const json = document.getElementById('json') as HTMLTextAreaElement | null;
 	if (status === null || results === null || json === null) {
 		return;
 	}
@@ -469,8 +469,8 @@ async function runDevice(): Promise<void> {
 			cell(row, `failed: ${result.message}`);
 		}
 	}
-	status.textContent = 'Done. Send a screenshot of the table and the text below.';
-	json.textContent = JSON.stringify({ environment, report }, null, 2);
+	status.textContent = 'Done. Send a screenshot of the table and the text in the box below.';
+	json.value = JSON.stringify({ environment, report }, null, 2);
 }
 
 if (new URLSearchParams(location.search).get('run') === 'device') {
