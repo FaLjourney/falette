@@ -15,7 +15,8 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
-		"preview:pattern": "node scripts/preview-pattern.js"
+		"preview:pattern": "node scripts/preview-pattern.js",
+		"harness": "vite build -c tests/harness/vite.config.ts && vite preview -c tests/harness/vite.config.ts --host"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

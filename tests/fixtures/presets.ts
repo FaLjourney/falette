@@ -30,3 +30,21 @@ export const portraitPresets: Record<string, Size> = {
 	'ipad-mini': { width: 1488, height: 2266 },
 	'tab-wqxga': { width: 1600, height: 2560 }
 };
+
+/** Every landscape preset in PRD Appendix A (all laptops and desktops), until presets.json exists. */
+export const landscapePresets: Record<string, Size> = {
+	'mbp-16': { width: 3456, height: 2234 },
+	'mbp-14': { width: 3024, height: 1964 },
+	'mba-15': { width: 2880, height: 1864 },
+	'mba-13': { width: 2560, height: 1664 },
+	'lap-wuxga': { width: 1920, height: 1200 },
+	'lap-wqxga': { width: 2560, height: 1600 },
+	'desk-5k': { width: 5120, height: 2880 },
+	'desk-4k': { width: 3840, height: 2160 },
+	'desk-uw': { width: 3440, height: 1440 },
+	'desk-qhd': { width: 2560, height: 1440 },
+	'desk-fhd': { width: 1920, height: 1080 }
+};
+
+/** All 28 presets in PRD Appendix A, until presets.json exists. */
+export const allPresets: Record<string, Size> = { ...portraitPresets, ...landscapePresets };
