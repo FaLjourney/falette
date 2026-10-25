@@ -6,7 +6,9 @@
 // Each set is saved as SVG files and as one PNG sheet, rendered with Playwright's Chromium
 // (once: npx playwright install chromium). Also reports file sizes and the median render time at
 // desk-5k for default and maximum params (ENG-07).
-// Usage: npm run preview:pattern -- <pattern-id>
+// Optional key=value arguments fix those params in every set, e.g. type=radial; the files then go
+// to previews/<pattern-id>/<key>-<value>/.
+// Usage: npm run preview:pattern -- <pattern-id> [key=value ...]
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from '@playwright/test';
@@ -14,9 +16,21 @@ import { runnerImport } from 'vite';
 
 const id = process.argv[2];
 if (id === undefined) {
-	process.stderr.write('Usage: npm run preview:pattern -- <pattern-id>\n');
+	process.stderr.write('Usage: npm run preview:pattern -- <pattern-id> [key=value ...]\n');
 	process.exit(1);
 }
+const fixed = Object.fromEntries(
+	process.argv.slice(3).map((arg) => {
+		const [key, value] = arg.split('=');
+		return [key, value !== '' && Number.isFinite(Number(value)) ? Number(value) : value];
+	})
+);
+const out = [
+	'previews',
+	id,
+	...Object.entries(fixed).map(([key, value]) => `${key}-${value}`)
+].join('/');
+const title = [id, ...Object.entries(fixed).map(([key, value]) => `${key} ${value}`)].join(' · ');
 const seed = '42';
 const seeds = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const seedPresets = ['and-fhd20', 'mba-13'];
@@ -54,16 +68,18 @@ const item = (file, group, label, preset, params = {}, runSeed = seed) => ({
 	group,
 	label,
 	size: representativePresets[preset],
-	params,
+	params: { ...params, ...fixed },
 	seed: runSeed
 });
 
-const paramValues = Object.entries(pattern.params).flatMap(([key, def]) =>
-	(def.type === 'number' ? [def.min, def.default, def.max] : def.options).map((value) => [
-		key,
-		value
-	])
-);
+const paramValues = Object.entries(pattern.params)
+	.filter(([key]) => !(key in fixed))
+	.flatMap(([key, def]) =>
+		(def.type === 'number' ? [def.min, def.default, def.max] : def.options).map((value) => [
+			key,
+			value
+		])
+	);
 const sets = [
 	{
 		name: `seed-${seed}`,
@@ -113,7 +129,7 @@ for (const { name, items } of sets) {
 	for (const variant of ['light', 'dark']) {
 		for (const { file, group, label, size, params, seed: runSeed } of items) {
 			const svg = render(config(size, variant, params, runSeed), pattern);
-			const path = `previews/${id}/${variant}/${file}.svg`;
+			const path = `${out}/${variant}/${file}.svg`;
 			await mkdir(resolve(path, '..'), { recursive: true });
 			await writeFile(path, svg);
 			print(`${path}  ${Buffer.byteLength(svg)} B`);
@@ -124,10 +140,10 @@ for (const { name, items } of sets) {
 	}
 	// Start narrow, then widen the page to the sheet so the PNG has no empty margin.
 	await page.setViewportSize({ width: 320, height: 600 });
-	await page.setContent(sheet(`${id} · ${name}`, rows));
+	await page.setContent(sheet(`${title} · ${name}`, rows));
 	const width = await page.evaluate(() => document.documentElement.scrollWidth);
 	await page.setViewportSize({ width, height: 600 });
-	const png = `previews/${id}/${name}.png`;
+	const png = `${out}/${name}.png`;
 	await page.screenshot({ path: png, fullPage: true });
 	print(png);
 }
@@ -143,7 +159,8 @@ for (const [label, params] of [
 	['default', {}],
 	['max', maxParams]
 ]) {
-	const run = config(representativePresets['desk-5k'], 'light', params);
+	const timed = { ...params, ...fixed };
+	const run = config(representativePresets['desk-5k'], 'light', timed);
 	for (let i = 0; i < timedRuns; i++) render(run, pattern);
 	const times = Array.from({ length: timedRuns }, () => {
 		const start = performance.now();
@@ -153,7 +170,7 @@ for (const [label, params] of [
 	const median = times[Math.floor(timedRuns / 2)];
 	const bytes = Buffer.byteLength(render(run, pattern));
 	print(
-		`desk-5k ${label} ${JSON.stringify(params)}: median ${median.toFixed(3)} ms, ` +
+		`desk-5k ${label} ${JSON.stringify(timed)}: median ${median.toFixed(3)} ms, ` +
 			`slowest ${times[timedRuns - 1].toFixed(3)} ms of ${timedRuns}, ${bytes} B (ENG-07: 50 ms)`
 	);
 }
