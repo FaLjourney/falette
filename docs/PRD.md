@@ -250,7 +250,7 @@ Tombol Unduh mengunduh format dan varian yang dipilih di panel ini. Defaultnya P
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
-| EXP-01 | PNG berdimensi persis sesuai preset atau ukuran custom (SVG → canvas → `toBlob`) | P0 |
+| EXP-01 | PNG berdimensi persis sesuai preset atau ukuran custom (SVG → canvas → `toBlob`, atau `convertToBlob` di worker) | P0 |
 | EXP-02 | SVG self-contained: tanpa font atau gambar eksternal, `width`/`height` dan `viewBox` sesuai ukuran, angka dibulatkan maksimal 2 desimal | P0 |
 | EXP-03 | Panel kode SVG dengan tombol Salin serta pilihan Rapi atau Ringkas (minify) | P0 |
 | EXP-04 | Unduh varian Terang atau Gelap secara terpisah | P0 |

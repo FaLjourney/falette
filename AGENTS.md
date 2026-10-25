@@ -80,6 +80,7 @@ src/
   lib/
     engine/       render(), PRNG, warna OKLCH, utilitas SVG (tanpa Svelte)
     patterns/     satu file per pola (<id>.ts) dan daftar ringan: ID, nama, kategori
+    export/       ekspor PNG dan SVG, kode SVG Rapi/Ringkas, nama file, dan worker PNG (tanpa Svelte)
     presets/      presets.json (Lampiran A) dan 5 templat overlay
     i18n/         en.json, id.json
     components/   komponen Svelte
@@ -91,6 +92,7 @@ src/
     [lang=lang]/+page.svelte         Home
     [lang=lang]/create/+page.svelte  Create
 tests/            tes unit, snapshot, dan browser
+  harness/        halaman uji ekspor di browser untuk Playwright dan ponsel (tidak ikut ke situs)
 docs/
   PRD.md
   falette-100-pattern.md
