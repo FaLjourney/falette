@@ -23,14 +23,15 @@ Dua tambahan dari FaL saat menyetujui: pratinjau 6 preset untuk radial juga, dan
 | 1 | `tests/patterns/gradient.test.ts` (baru) | 65 tes, rinciannya di bawah. | PAT-10, ENG-07 |
 | 2 `f73733e` | `tests/fixtures/snapshot-patterns.ts`, `tests/engine/__snapshots__/gradient/` | 3 seed bersama × 6 preset × Terang dan Gelap (36 file), ditambah 14 kasus khusus di `ios-63` dan `mba-13` Terang (28 file). | ENG-08 |
 | 3 `f5b93cb` | `scripts/preview-pattern.js` | Argumen opsional `key=value` yang mengunci parameter di semua set pratinjau, misalnya `type=radial`. Hasilnya ditulis ke `previews/<id>/<key>-<value>/`. | PAT-10 |
-| 4 | `docs/laporan/gradient/` | Laporan ini dan 7 gambar. | PAT-10, ENG-07 |
+| 4 `5619deb` | `docs/laporan/gradient/` | Laporan ini dan 7 gambar. | PAT-10, ENG-07 |
+| 5 | `docs/falette-100-pattern.md`, laporan ini | Tanda ✅ di depan Gradient setelah FaL menyetujui pratinjau linear dan radial. | PAT-10 |
 
 Yang tidak disentuh:
 
-- Engine, palet, arcs, hills, waves, fixture preset, PRD, katalog, dan AGENTS.md.
+- Engine, palet, arcs, hills, waves, fixture preset, PRD, dan AGENTS.md.
 - Versi engine tetap 1.
 - Snapshot mock, arcs, hills, dan waves tidak berubah.
-- Tanda ✅ di katalog menunggu persetujuan pratinjau.
+- Katalog, kecuali tanda ✅ di depan Gradient setelah FaL menyetujui pratinjau (commit 5).
 
 ---
 
@@ -200,4 +201,3 @@ Untuk diingat saat mengerjakan ekspor PNG (EXP-01):
 
 - Banding dan tampilan di Safari dan Firefox.
 - Waktu render dan cat di ponsel kelas menengah (ENG-07, ≤ 100 ms). Yang diukur hanya `render()` di Node.
-- Pemeriksaan visual pratinjau oleh FaL. Tanda ✅ di katalog menunggu persetujuan itu.

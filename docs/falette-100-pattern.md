@@ -79,7 +79,7 @@ Set pamer Home (HOME-04) di MVP memakai keempat pola MVP.
 | 15a | `arcs` | ✅ Arcs | Lanskap | SVG | `layers` 3–12 (5) · `curve` 0–1 (0.6) · `focus` 0–1 (0.5) | Busur lengkung bertumpuk dengan gaya minimalis. | Dipecah dari #15. Nilai awal sama dengan contoh di Lampiran B PRD. |
 | 15b | `hills` | ✅ Hills | Lanskap | SVG | `layers` 3–10 (5) · `height` 0–1 (0.5) · `softness` 0–1 (0.6) | Bukit lengkung bertumpuk dengan gaya minimalis. | Dipecah dari #15. |
 | 1 | `waves` | ✅ Waves (Layered waves) | Lanskap | SVG | `layers` 3–12 (6) · `amplitude` 0–1 (0.4) · `frequency` 1–6 (2) | Beberapa lapis gelombang bertumpuk dengan warna bergradasi dari depan ke belakang. | Nama di aplikasi: Waves. Maksimal 48 gelombang selebar layar (ENG-07). Kecuraman maksimal 0,6× panjang gelombang. |
-| 2 | `gradient` | Gradient (linear dan radial) | Gradasi | SVG | `type` linear/radial (linear) · `angle` 0–360 (135) · `spread` 0–1 (0.5) | Peralihan halus antarwarna, lurus ke satu arah atau memancar dari satu titik pusat. | Seed mengatur sebaran titik warna dan, untuk radial, letak pusatnya, agar Acak tetap menghasilkan variasi yang terlihat (PAT-10). |
+| 2 | `gradient` | ✅ Gradient (linear dan radial) | Gradasi | SVG | `type` linear/radial (linear) · `angle` 0–360 (135) · `spread` 0–1 (0.5) | Peralihan halus antarwarna, lurus ke satu arah atau memancar dari satu titik pusat. | Seed mengatur sebaran titik warna dan, untuk radial, letak pusatnya, agar Acak tetap menghasilkan variasi yang terlihat (PAT-10). |
 
 ## Fase 2 (20 pola)
 
