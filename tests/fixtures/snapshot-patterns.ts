@@ -1,11 +1,12 @@
 import type { Params, PatternModule, Variant } from '../../src/lib/engine/types';
 import arcs from '../../src/lib/patterns/arcs';
+import gradient from '../../src/lib/patterns/gradient';
 import hills from '../../src/lib/patterns/hills';
 import waves from '../../src/lib/patterns/waves';
 import { mockPattern } from './mock-pattern';
 
 /** Patterns covered by the ENG-08 snapshot test. */
-export const snapshotPatterns: PatternModule[] = [mockPattern, arcs, hills, waves];
+export const snapshotPatterns: PatternModule[] = [mockPattern, arcs, hills, waves, gradient];
 
 /** Fixed seeds shared by all patterns: numeric and word seeds take the same text-hash path. */
 export const snapshotSeeds = ['1', '42', 'senja-teduh-42'];
@@ -62,6 +63,24 @@ export const snapshotExtraCases: Record<string, SnapshotCase[]> = {
 		{ seed: '42', params: { frequency: 6 } },
 		{ seed: '42', params: { layers: 3, amplitude: 0, frequency: 1 } },
 		{ seed: '42', params: { layers: 12, amplitude: 1, frequency: 6 } }
+	],
+	gradient: [
+		// The shared seeds run linear only, so radial gets them here. '53' shifts the linear zone to the
+		// background end and crowds the stops there; '2875' shifts it to the far end and crowds them there.
+		{ seed: '1', params: { type: 'radial' } },
+		{ seed: '42', params: { type: 'radial' } },
+		{ seed: 'senja-teduh-42', params: { type: 'radial' } },
+		{ seed: '53', params: {} },
+		{ seed: '2875', params: {} },
+		{ seed: '42', params: { angle: 0 } },
+		{ seed: '42', params: { angle: 90 } },
+		{ seed: '42', params: { angle: 270 } },
+		{ seed: '42', params: { spread: 0 } },
+		{ seed: '42', params: { spread: 1 } },
+		{ seed: '42', params: { type: 'radial', angle: 0 } },
+		{ seed: '42', params: { type: 'radial', angle: 270 } },
+		{ seed: '42', params: { type: 'radial', spread: 0 } },
+		{ seed: '42', params: { type: 'radial', spread: 1 } }
 	]
 };
 
