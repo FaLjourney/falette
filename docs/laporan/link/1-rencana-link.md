@@ -1,6 +1,8 @@
 # Rencana: link berbagi (SHR-01 sampai SHR-03, Lampiran B)
 
-Langkah 4 Fase 1a di AGENTS.md, bagian terakhir Fase 1a. Rencana ini menunggu persetujuan FaL; bagian [Keputusan](#5-keputusan-yang-kubutuhkan) berisi pilihan beserta rekomendasiku. Belum ada kode yang ditulis.
+Langkah 4 Fase 1a di AGENTS.md, bagian terakhir Fase 1a. Bagian [Keputusan](#5-keputusan-yang-kubutuhkan) berisi pilihan beserta rekomendasiku.
+
+**Disetujui:** FaL menyetujui semua rekomendasi (1a sampai 13a) dan aturan turunan di bagian 4. Satu tambahan: laporan akhir mengumpulkan semua hal yang belum diatur PRD dari sesi ekspor dan sesi ini dalam satu daftar, supaya bisa diputuskan sekaligus sebelum Fase 1b.
 
 **Pengecekan awal:** main sudah memuat PR #10 (`918d811`, ekspor). Branch `claude/intelligent-bell-hh6w0u` sama dengan main.
 
