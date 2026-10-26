@@ -123,7 +123,7 @@ Di mobile, menu pindah ke tombol menu, kedua tombol CTA bertumpuk di bawah mocku
 | HOME-04 | Hero | Satu mockup device berisi wallpaper dari engine dengan jam berjalan, mengikuti tema website. Setiap 2 detik ukuran device (dari preset) dan polanya berganti acak dari set pola pamer Home (4–8 pola yang ikut dimuat bersama halaman) di dalam kotak berukuran tetap, sehingga tinggi hero tidak berubah. Pergantian berhenti selama mockup disentuh, diarahkan kursor, atau mendapat fokus keyboard, dan berlanjut saat kursor atau fokus pergi atau mockup diketuk lagi. Pergantian juga berhenti saat tab tidak aktif atau prefers-reduced-motion aktif | P0 |
 | HOME-05 | Preview | Preview live dari engine, bukan video: pola dari set pola pamer Home berganti tiap ±3 detik, lengkap dengan overlay lock screen dan jam | P0 |
 | HOME-06 | Preview | Satu preview layar desktop tanpa pilihan device (layar lebar paling jelas menunjukkan beda terang dan gelap), dengan slider pembanding yang membelah preview menjadi sisi terang dan gelap. Label Terang ada di kiri bawah dan Gelap di kanan bawah preview; slider bisa digeser dengan tombol panah dan memakai peran ARIA slider | P0 |
-| HOME-07 | Preview | Tombol "Create" di bawah preview membawa pola, seed, palet, latar, dan parameter yang sedang tampil lewat URL; ukuran device tidak ikut dibawa, sehingga Create tetap mendeteksi device pengunjung (DEV-03) | P0 |
+| HOME-07 | Preview | Tombol "Create" di bawah preview membawa pola, seed, palet, latar, dan parameter yang sedang tampil lewat URL; ukuran device tidak ikut dibawa, sehingga Create tetap mendeteksi device pengunjung (DEV-03); mode tampilan juga tidak dibawa, jadi Create memakai tampilan awalnya (MODE-03) | P0 |
 | HOME-08 | Preview | Pergantian otomatis berhenti selama pengguna berinteraksi (sentuh, kursor, atau fokus keyboard pada preview) dan berlanjut saat kursor atau fokus pergi, atau saat preview diketuk lagi. Pergantian juga berhenti saat tab tidak aktif atau `prefers-reduced-motion` aktif | P0 |
 | HOME-09 | Features | Enam kartu berisi ikon, judul, dan satu kalimat, berurutan: Private & Free, Customization, Light & Dark, Pattern Library, Custom Palettes, dan PNG & SVG | P0 |
 | HOME-10 | Features | Grid 3 kolom di desktop, 2 di tablet, 1 di mobile | P0 |
@@ -167,7 +167,7 @@ Panel dibuka di kategori hasil deteksi, dengan preset terdekat ditandai Terdetek
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
 | DEV-01 | Kategori: Ponsel, Tablet, Laptop, Desktop, dan Custom | P0 |
-| DEV-02 | Preset disimpan sebagai data JSON: nama, contoh model, resolusi, OS, templat overlay (PRV-03), dan tautan sumber spesifikasi (Lampiran A) | P0 |
+| DEV-02 | Preset disimpan sebagai data JSON: ID, kategori, resolusi, contoh model, OS, templat overlay (PRV-03), dan tautan sumber spesifikasi (Lampiran A). Nama preset disimpan di file terjemahan dengan ID preset sebagai kunci, sedangkan contoh model tetap di JSON karena nama produk tidak diterjemahkan | P0 |
 | DEV-03 | Bila URL dan pengaturan terakhir (SHR-04, mulai Fase 2) sama-sama tidak membawa ukuran device (d, atau w dan h), Create menebak device dari `screen` × `devicePixelRatio`, memilih preset terdekat, dan memberi label "Terdeteksi" dengan keterangan "perkiraan" di tooltip | P0 |
 | DEV-04 | Ukuran custom 320–7680 px per sisi, dengan tombol tukar orientasi | P0 |
 | DEV-05 | Komposisi menyesuaikan rasio layar, tidak direntangkan | P0 |
@@ -252,16 +252,26 @@ Tombol Unduh mengunduh format dan varian yang dipilih di panel ini. Defaultnya P
 | --- | --- | --- |
 | EXP-01 | PNG berdimensi persis sesuai preset atau ukuran custom (SVG → canvas → `toBlob`, atau `convertToBlob` di worker) | P0 |
 | EXP-02 | SVG self-contained: tanpa font atau gambar eksternal, `width`/`height` dan `viewBox` sesuai ukuran, angka dibulatkan maksimal 2 desimal | P0 |
-| EXP-03 | Panel kode SVG dengan tombol Salin serta pilihan Rapi atau Ringkas (minify) | P0 |
+| EXP-03 | Panel kode SVG dengan tombol Salin serta pilihan Rapi atau Ringkas (minify); setelah menyalin, label tombol berganti menjadi Disalin (Copied) selama 2 detik, seperti Salin link (SHR-02) | P0 |
 | EXP-04 | Unduh varian Terang atau Gelap secara terpisah | P0 |
 | EXP-05 | Nama file `falette-{pola}-{mode}-{lebar}x{tinggi}-{seed}.{ext}` | P0 |
 | EXP-06 | Batas PNG mengikuti kemampuan browser (Safari iOS sekitar 16,7 MP); bila terlampaui, tawarkan skala lebih kecil atau SVG | P0 |
-| EXP-07 | Ekspor menampilkan indikator proses dan tidak membekukan UI; bila gagal, muncul pesan yang jelas beserta saran ukuran lebih kecil atau SVG | P0 |
+| EXP-07 | Ekspor menampilkan indikator proses dan tidak membekukan UI; bila gagal, muncul pesan yang jelas beserta saran ukuran lebih kecil atau SVG. Setiap kali gagal, ukuran yang ditawarkan adalah setengah luas sebelumnya (sisi × 0,71); bila sisi terpendeknya akan di bawah 320 px, hanya SVG yang ditawarkan | P0 |
 | EXP-08 | Tombol Simpan/Bagikan memakai Web Share API dengan file bila didukung, agar pengguna iPhone bisa menyimpan ke Foto; selain itu unduhan biasa | P1 |
 | EXP-09 | ZIP berisi pasangan Terang dan Gelap, atau set beberapa preset dari seed yang sama | P1 |
 | EXP-10 | Salin sebagai CSS background (data URI) | P1 |
 | EXP-11 | Konfigurasi disisipkan di `<metadata>` SVG, sehingga desain bisa dibuka lagi lewat Impor SVG | P2 |
 | EXP-12 | Unduh mockup (wallpaper, bingkai, dan jam) sebagai PNG untuk dibagikan | P2 |
+
+Kotak PNG terlalu besar (EXP-06) dan kotak gagal ekspor (EXP-07) memakai bentuk dan tombol yang sama. Teksnya:
+
+| Teks | Indonesia | English |
+| --- | --- | --- |
+| Judul, PNG terlalu besar | PNG {lebar} × {tinggi} px terlalu besar | PNG {width} × {height} px is too large |
+| Isi, PNG terlalu besar | Melebihi batas PNG di browser ini | Exceeds this browser's PNG limit |
+| Judul, gagal ekspor | PNG gagal dibuat | Couldn't create the PNG |
+| Isi, gagal ekspor | Browser kehabisan memori atau menolak ukuran ini. Coba ukuran lebih kecil atau unduh SVG. | The browser ran out of memory or couldn't handle this size. Try a smaller size or download the SVG. |
+| Tombol | Unduh lebih kecil · Unduh SVG | Download smaller · Download SVG |
 
 ### 8.8 Simpan dan bagikan tanpa backend
 
@@ -269,8 +279,8 @@ Tanpa database, URL dan penyimpanan browser menjadi tempat menyimpan desain.
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
-| SHR-01 | Seluruh konfigurasi tersimpan di hash URL (`#…`) dan diperbarui dengan `history.replaceState`; hash tidak pernah terkirim ke server | P0 |
-| SHR-02 | Tombol "Salin link"; membuka link menghasilkan desain yang identik. Bila akses clipboard ditolak, link tampil terpilih agar bisa disalin manual. Link yang disalin tidak memakai awalan bahasa (/create/#…), sehingga penerima membuka desain yang sama dalam bahasanya sendiri | P0 |
+| SHR-01 | Seluruh konfigurasi tersimpan di hash URL (`#…`) dan diperbarui dengan `replaceState`, tanpa menambah riwayat browser; hash tidak pernah terkirim ke server. Bila hash berubah saat Create terbuka, misalnya link lain ditempel di tab yang sama, desain dimuat ulang dari hash baru | P0 |
+| SHR-02 | Tombol "Salin link"; membuka link menghasilkan desain yang identik. Setelah menyalin, label tombol berganti menjadi Disalin (Copied) selama 2 detik. Bila akses clipboard ditolak, link tampil di kotak teks baca-saja di bawah tombol, langsung terpilih, dengan label "Salin link ini secara manual:" (Copy this link manually:). Link yang disalin tidak memakai awalan bahasa (/create/#…), sehingga penerima membuka desain yang sama dalam bahasanya sendiri | P0 |
 | SHR-03 | URL memuat versi engine (`v`). Perubahan algoritma yang mengubah hasil menaikkan versi; link lama tetap menghasilkan gambar yang sama atau menampilkan pemberitahuan | P0 |
 | SHR-04 | Pengaturan terakhir diingat di `localStorage`. Urutan muat: konfigurasi di URL, lalu pengaturan terakhir, lalu deteksi device. Urutan ini berlaku per kunci: nilai yang ada di URL dipakai, nilai lain diambil dari pengaturan terakhir, dan deteksi device hanya mengisi ukuran yang masih kosong | P1 |
 | SHR-05 | Favorit tersimpan di `localStorage` per perangkat, dengan thumbnail, dan bisa diekspor atau diimpor sebagai file JSON | P1 |
@@ -375,7 +385,7 @@ Risiko terbesar ada di ekspor PNG pada iPhone dan konsistensi hasil saat algorit
 | Algoritma berubah, link lama menghasilkan gambar berbeda | Kepercayaan pengguna turun | Versi engine di URL dan uji snapshot (SHR-03, ENG-08) |
 | Deteksi device meleset karena scaling OS atau setelan resolusi Android | Ukuran kurang pas | Label "perkiraan", cocokkan ke preset terdekat menurut rasio, pilihan manual selalu tersedia |
 | Mockup menyerupai produk bermerek | Masalah merek dan lisensi | Bingkai generik, font OFL, tanpa aset resmi (PRV-05, PRV-06) |
-| Banding pada gradien PNG | Wallpaper tampak bergaris | Hindari gradien lebar dengan selisih warna kecil; grain opsional (ENG-09) |
+| Banding pada gradien PNG | Wallpaper tampak bergaris | Hindari gradien lebar dengan selisih warna kecil; grain opsional (ENG-09). Chromium sudah memberi dithering; Safari dan Firefox diuji dulu lewat halaman uji ekspor, lalu dithering PNG diputuskan (Q11) |
 | Slider lambat di ponsel lama | Pengalaman terasa berat | Maksimal satu render per frame; kompleksitas pola dibatasi |
 | Kebijakan hosting gratis berubah atau kuotanya habis, mis. batas transfer data paket Hobby Vercel | Situs tidak tersedia | Situs statis portabel, bisa dipindah ke Cloudflare Pages, GitHub Pages, atau Netlify dengan cepat |
 | Terjemahan sembilan bahasa | Teks salah atau tidak konsisten, rilis tertunda | Satu file sumber teks, penerjemah penutur asli, dan pemeriksaan tata letak per bahasa sebelum rilis |
@@ -383,7 +393,7 @@ Risiko terbesar ada di ekspor PNG pada iPhone dan konsistensi hasil saat algorit
 
 ## 16. Pertanyaan terbuka
 
-Keputusan yang dibutuhkan sebelum Fase 1 sudah lengkap: Q2 (stack) dan Q8 (preset) sudah diputuskan, sedangkan Q3, Q6, Q7, dan Q10 bisa menyusul. Kolom Usulan berisi rekomendasi awal, atau keputusan bila statusnya Diputuskan.
+Keputusan yang dibutuhkan sebelum Fase 1 sudah lengkap: Q2 (stack) dan Q8 (preset) sudah diputuskan, sedangkan Q3, Q6, Q7, Q10, dan Q11 bisa menyusul. Kolom Usulan berisi rekomendasi awal, atau keputusan bila statusnya Diputuskan.
 
 | ID | Pertanyaan | Usulan | Status |
 | --- | --- | --- | --- |
@@ -397,6 +407,7 @@ Keputusan yang dibutuhkan sebelum Fase 1 sudah lengkap: Q2 (stack) dan Q8 (prese
 | Q8 | Daftar preset final? | 28 preset: 26 di Lampiran A ditambah tablet Android 16:10 dan laptop 16:10. Overlay jam memakai 5 templat menurut OS, pemeriksaan visual pola memakai 6 preset perwakilan, dan preset baru hanya dibuat untuk resolusi baru (Lampiran A) | Diputuskan |
 | Q9 | Create bergaya tombol aksen di navbar? | Ya, sebagai ajakan utama | Diputuskan |
 | Q10 | 16 pola Piksel dan Glyph di Katalog Pola dirilis khusus PNG, ditunda, atau dibuang? | Tunda sampai setelah Fase 3. Pola Glyph tetap bisa SVG bila hurufnya disimpan sebagai path; pola Piksel butuh jalur render canvas tersendiri karena engine dan ekspor PNG berbasis SVG (ENG-01, EXP-01) | Terbuka |
+| Q11 | Beri dithering pada PNG gradien? | Belum di MVP. Chromium sudah memberi dithering sendiri; putuskan setelah uji Safari dan Firefox di halaman uji ekspor (laporan ekspor di repositori) | Terbuka |
 
 ## Lampiran A. Preset device awal
 
@@ -453,13 +464,34 @@ Seluruh desain bisa direkonstruksi dari hash URL; contoh berikut membuka pola Ar
 | `pal` | Palet warna pola, HEX versi Terang tanpa `#`, dipisah titik; versi Gelap diturunkan engine (MODE-02) | `e07a5f.3d405b.81b29a` |
 | `bg` | Latar: `auto`, atau HEX versi Terang tanpa `#`; versi Gelap diturunkan engine (COL-05) | `auto` |
 | `m` | Tampilan mode: `light`, `dark`, atau `pair`; di mobile, `pair` tampil sebagai Bandingkan (MODE-03) | `pair` |
-| `d` | ID preset device dari Lampiran A | `ios-69` |
+| `d` | ID preset device dari Lampiran A. ID preset permanen dan tidak pernah diganti atau dipakai ulang, seperti ID pola (PAT-09) | `ios-69` |
 | `w`, `h` | Ukuran custom dalam px, menggantikan `d` | `w=3000&h=2000` |
 | `o` | Orientasi preset tablet: `portrait`, `landscape`, atau `square` (DEV-06, DEV-07); tidak ditulis untuk preset lain | `landscape` |
 | `x` | Parameter pola, `nama:nilai` dipisah koma | `layers:5,curve:0.6,focus:0.5` |
 | `fx` | Efek lapisan (ENG-09), dipisah titik; tidak ditulis bila tanpa efek | `grain.scanlines` |
 
 Salin link selalu menulis semua kunci yang berlaku dan semua parameter pola. Saat membaca link, parameter yang hilang memakai nilai awal dari Katalog Pola, nilai di luar rentang dipotong ke batasnya, kunci yang tidak dikenal diabaikan, dan ID pola yang tidak dikenal kembali ke Arcs dengan pemberitahuan.
+
+Aturan baca lainnya:
+
+- Nilai parameter di antara langkah dibulatkan ke langkah terdekat, misalnya `layers:3.5` menjadi 4.
+- HEX yang tidak sah di `pal` dibuang. Bila lebih dari 5 warna, dipakai lima yang pertama.
+- Kunci yang kosong atau tidak terbaca, `bg` yang tidak sah, dan `d` yang tidak dikenal dianggap hilang, tanpa pemberitahuan.
+- `w` dan `h` dibulatkan ke piksel lalu dipotong ke 320–7680 (DEV-04).
+- Setelah ID pola tak dikenal kembali ke Arcs, `x` diabaikan karena nilainya milik pola lain.
+- `v` yang berbeda dari versi engine tetap dirender dengan engine sekarang, disertai pemberitahuan (SHR-03).
+- Di MVP, `o` belum ditulis maupun dibaca, jadi preset tablet selalu potret.
+- Kunci yang muncul dua kali memakai nilai yang pertama.
+
+Kunci yang tidak ada di link diisi nilai awal Create: Arcs, seed acak di setiap kunjungan, palet Senja (COL-01), Latar Otomatis (COL-05), tampilan awal MODE-03, dan ukuran hasil deteksi device (DEV-03).
+
+Pemberitahuan link tampil sebagai kotak kecil di atas preview yang bisa ditutup, tanpa menampilkan ID pola:
+
+| Pemberitahuan | Indonesia | English |
+| --- | --- | --- |
+| Pola tak dikenal | Pola di link ini tidak tersedia, jadi Arcs yang ditampilkan. | The pattern in this link isn't available, so Arcs is shown instead. |
+| Versi berbeda | Link ini dibuat dengan versi Falette lain, jadi hasilnya bisa sedikit berbeda. | This link was made with a different version of Falette, so the result may look slightly different. |
+| Tombol tutup | Tutup | Close |
 
 ## Lampiran C. File di repositori
 
