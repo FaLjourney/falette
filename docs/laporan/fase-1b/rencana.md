@@ -2,7 +2,7 @@
 
 Langkah 5 di AGENTS.md. Rencana ini hanya menyusun urutan sesi; belum ada kode. Setiap sesi menjadi satu draft PR kecil yang bisa diuji sendiri.
 
-**Status:** menunggu persetujuan FaL. Bagian [Pertanyaan](#6-pertanyaan-untuk-fal) berisi hal yang belum diatur PRD, masing-masing dengan pilihan dan rekomendasiku (pilihan a).
+**Disetujui:** FaL menyetujui 13 sesi dengan urutan di bagian 1. Untuk pertanyaan di bagian 6, jawabannya pilihan a, kecuali jawaban dan tambahan yang dicatat di [Keputusan FaL](#keputusan-fal). Rincian sesi di bawah sudah disesuaikan dengan keputusan itu. Di PR yang sama, `docs/PRD.md` diperbarui dengan tiga perubahan: Q7 diputuskan (`falette.vercel.app`), EXP-03 memakai label "Salin kode" (Copy code), dan kalimat di atas tabel Pertanyaan terbuka.
 
 **Pengecekan awal:** main sudah memuat PR #12 (`12744a5`, pembaruan PRD dengan keputusan sebelum Fase 1b), digabung lewat `7ddf46b`. `docs/PRD.md` di main identik dengan ekspor yang FaL lampirkan. Branch `claude/charming-albattani-ms0114` dimulai ulang dari main itu.
 
@@ -10,14 +10,52 @@ Langkah 5 di AGENTS.md. Rencana ini hanya menyusun urutan sesi; belum ada kode. 
 
 ---
 
+## Keputusan FaL
+
+### Jawaban bagian 6
+
+Pilihan a untuk semua pertanyaan, kecuali dan dengan catatan berikut.
+
+| No. | Jawaban |
+| --- | --- |
+| 2 | (b), dengan rencana yang singkat. Tiap sesi punya folder `docs/laporan/fase-1b/NN-nama/` berisi `rencana.md` (rencana singkat dan tabel teks ID/EN), lalu `laporan.md`. Rencana wajib berupa file di branch PR, bukan hanya di deskripsi PR. |
+| 5 | URL produksi `https://falette.vercel.app` (Q7 di PRD). Disimpan di satu konstanta supaya mudah diganti bila nanti memakai domain sendiri. |
+| 12 | (a). Senja memakai Latar Otomatis, karena nilai awal Create di Lampiran B adalah palet Senja dengan Latar Otomatis; `bg=f4efe6` di link contoh hanya contoh. Warna `e07a5f.3d405b.81b29a` boleh menjadi dasar Senja. Nama palet di ringkasan dicocokkan dari `pal` saja, dengan warna dan urutan sama persis; `bg` tidak memengaruhi nama karena latar diatur terpisah (COL-05). |
+| 17 | (a), dengan aturan umum: pilih susunan kiri-kanan atau atas-bawah yang membuat kedua gambar lebih besar di area preview. Untuk preset hasilnya sama dengan aturan potret dan lanskap, dan ukuran Custom yang mendekati persegi ikut benar. |
+| 20 | (a). Bila Sesi 6 terlalu besar, color picker boleh menjadi PR sendiri. |
+| 29 | (a). Jam besar tidak menampilkan AM/PM, seperti lock screen asli. id-ID menulis jam dengan titik ("9.41"), dan ini ditampilkan di tangkapan layar laporan Sesi 9. |
+| 33 | (b): satu kalimat pendek per kartu sesuai HOME-09, karena PRD yang berlaku. Judul kartu tetap English. |
+| 34 | Footer EN: "© 2026 Falette. All rights reserved. Made by FaL." ID: "© 2026 Falette. Hak cipta dilindungi undang-undang. Dibuat oleh FaL." Tahun diambil saat build. Tanpa tautan repositori. |
+| 37 | (a), dibuat dengan Playwright yang sudah terpasang, tanpa dependensi baru. |
+| 38 | Dijawab FaL sebelum Sesi 13. |
+
+### Tambahan
+
+| No. | Sesi | Isi |
+| --- | --- | --- |
+| T1 | 1 | Layout akar memakai `trailingSlash = 'always'`, jadi `src/routes/404.html/` butuh `trailingSlash = 'never'` sendiri; tanpa itu build menghasilkan `404.html/index.html`. adapter-static di Vercel menulis `.vercel/output/config.json` sendiri tanpa aturan 404. Karena itu, di link Preview harus dibuktikan dan dilaporkan dua hal: path asal-asalan menampilkan 404 Falette, bukan 404 bawaan Vercel, dan header `frame-ancestors` terkirim (`curl -I`). |
+| T2 | Semua | Tidak boleh ada atribut `style="…"` di HTML prerender, karena `style-src` tanpa `'unsafe-inline'` memblokirnya. Pakai class, atau set lewat JavaScript setelah mount, mis. posisi slider Bandingkan dan rasio bingkai device. |
+| T3 | 3 | Uji juga bahwa hash yang ditulis Create sendiri tidak memicu muat ulang desain (jumlah render tidak bertambah), dan bahwa fokus serta posisi scroll tidak berubah saat hash ditulis. |
+| T4 | 4 | Selama Unduh berjalan, tampilkan indikator proses dan nonaktifkan tombolnya. Bila PNG terlalu besar atau gagal, tampilkan satu baris teks dari tabel teks ekspor PRD, tanpa tombol tawaran; kotak lengkap tetap di Sesi 10. Laporan Sesi 4 memuat langkah uji ekspor di iPhone untuk FaL: ukuran hasil deteksi, `d=desk-5k` (14,7 MP), `w=7680&h=4320` (33,2 MP, di atas batas Safari iOS), dan `p=gradient` untuk melihat banding (Q11). |
+| T5 | 1 | CI GitHub Actions untuk setiap PR: `npm run check`, `npm run lint`, tes unit, `npm run build`, dan e2e Chromium sebagai syarat lulus. E2e dengan `PW_BROWSERS=all` di Firefox dan WebKit berjalan sebagai job informasi yang boleh gagal sampai Sesi 13, dan hasilnya disebut di setiap laporan. `.github/` ditambahkan ke peta folder AGENTS.md. |
+
+### Yang disesuaikan di rencana ini
+
+- Bagian 3: folder rencana dan laporan per sesi (jawaban 2), larangan atribut `style` (T2), dan CI (T5).
+- Sesi 1: konstanta URL produksi (jawaban 5), rute 404 dan bukti di link Preview (T1), serta CI (T5).
+- Sesi 3: susunan Berdampingan (jawaban 17) dan uji hash milik Create sendiri (T3). Sesi 4: Unduh (T4). Sesi 6: color picker boleh jadi PR sendiri (jawaban 20). Sesi 9: format jam (jawaban 29). Sesi 11: kartu Features dan footer (jawaban 33 dan 34). Sesi 13: gambar Open Graph (jawaban 37).
+- Bagian 5: butir 6 dan 8 selesai lewat pembaruan PRD; butir 4 dan 5 diputuskan lewat jawaban 3 dan 33.
+
+---
+
 ## 1. Urutan sesi
 
 | No. | Sesi | ID PRD utama | Wireframe | Yang bisa FaL cek |
 | --- | --- | --- | --- | --- |
-| 1 | Rute, bahasa, dan tema | NAV-10, NAV-11, THM-01, THM-02, THM-04, THM-06, rute 404, NFR Bahasa, NFR Keamanan | — | Pengalih `/` dan `/create/` dengan hash utuh; tema mengikuti sistem tanpa berkedip |
+| 1 | Rute, bahasa, dan tema | NAV-10, NAV-11, THM-01, THM-02, THM-04, THM-06, rute 404, NFR Bahasa, NFR Keamanan, CI (T5) | — | Pengalih `/` dan `/create/` dengan hash utuh; tema mengikuti sistem tanpa berkedip; 404 Falette di link Preview |
 | 2 | Navbar | NAV-01 sampai NAV-06, NAV-09, THM-03, THM-05 | `navbar.png` | Menu desktop dan ponsel, dropdown bahasa, toggle tema |
 | 3 | Desain, hash, dan preview dasar | SHR-01, SHR-03, Lampiran B, DEV-03 (logika), DEV-05, COL-01 (data), MODE-01, ENG-07 | `create-layout.png` (area preview) | Create membaca dan menulis hash; ukuran mengikuti device sendiri |
-| 4 | Tata letak Create, Acak, dan Unduh | Bagian 8.1, PAT-04, EXP-01, EXP-04, EXP-05, DEV-02 (nama preset), NFR Aksesibilitas | `create-layout.png`, `create-mobile.png` | Akordeon desktop, bilah ringkasan dan lembar dari bawah di ponsel, Acak, Unduh PNG |
+| 4 | Tata letak Create, Acak, dan Unduh | Bagian 8.1, PAT-04, EXP-01, EXP-04, EXP-05, EXP-07 (indikator proses), DEV-02 (nama preset), NFR Aksesibilitas | `create-layout.png`, `create-mobile.png` | Akordeon desktop, bilah ringkasan dan lembar dari bawah di ponsel, Acak, Unduh PNG |
 | 5 | Panel Pola | PAT-01, PAT-02, PAT-03, ENG-07 | `panel-pola.png` (MVP) | Thumbnail empat pola dan slider parameter |
 | 6 | Panel Warna | COL-01, COL-02, COL-03, COL-05, ENG-11 | `panel-warna.png` | Palet terkurasi, Acak palet, slot, color picker, Latar |
 | 7 | Panel Perangkat | DEV-01, DEV-02, DEV-03, DEV-04 | `panel-perangkat.png`, `create-mobile.png` | Label Terdeteksi di device sendiri, ukuran Custom |
@@ -49,15 +87,16 @@ Total 13 sesi. Urutan Pola, Warna, lalu Perangkat kupertahankan.
 
 ## 3. Aturan untuk semua sesi
 
-- **Satu draft PR per sesi**, dari main terbaru. Rencana singkat dan tabel teks UI di awal sesi, lalu kode dan laporan di `docs/laporan/fase-1b/NN-nama/` beserta tangkapan layar (pertanyaan 1 dan 2).
-- **Kriteria selesai AGENTS.md:** `npm run check`, `npm run lint`, `npm test`, dan `npm run build` lulus. Snapshot ENG-08 tidak berubah dan versi engine tetap 1.
+- **Satu draft PR per sesi**, dari main terbaru, dengan folder `docs/laporan/fase-1b/NN-nama/`, mis. `01-rute-bahasa-tema/`. Pertama, `rencana.md` (rencana singkat dan tabel teks ID/EN) di-commit ke branch PR dan menunggu persetujuan FaL. Setelah itu kode, lalu `laporan.md` beserta tangkapan layar (jawaban 1 dan 2).
+- **Kriteria selesai AGENTS.md:** `npm run check`, `npm run lint`, `npm test`, dan `npm run build` lulus, dan CI di PR hijau (T5). Snapshot ENG-08 tidak berubah dan versi engine tetap 1. Setiap laporan menyebut hasil job Firefox dan WebKit, termasuk bila gagal.
+- **Tanpa atribut `style`** di HTML prerender (T2). Nilai yang dihitung, seperti posisi slider atau rasio bingkai, dipasang lewat JavaScript setelah mount; selebihnya memakai class. Tes CSP di bawah ikut menangkap pelanggarannya.
 - **Uji JavaScript awal** dibuat di Sesi 1 dan dijalankan di setiap PR: tes Playwright menjumlahkan ukuran gzip semua skrip yang dimuat saat `/en/` dan `/en/create/` dibuka, dengan batas 100 KB dan 200 KB (NFR Performa).
 - **Uji CSP** dibuat di Sesi 1: setiap tes Playwright gagal bila konsol browser mencatat pelanggaran Content-Security-Policy.
 - **Uji layar:** tiap sesi UI diuji di lebar 360, 390, 800, 1280, dan 2560 px, tanpa scroll horizontal (NFR Responsif), dalam tema terang dan gelap serta bahasa en dan id.
-- **Aksesibilitas otomatis** dengan axe bila pertanyaan 8 disetujui.
+- **Aksesibilitas otomatis** dengan `@axe-core/playwright` sebagai devDependency (jawaban 8).
 - **Tangkapan layar** di laporan: desktop 1280 × 800 dan ponsel 390 × 844, terang dan gelap.
 - **Cek di ponsel:** setiap PR mendapat link Preview dari Vercel di komentar PR. Link itu bisa dibuka di ponsel FaL.
-- **Browser:** di container hanya Chromium yang bisa dipakai. Firefox dan WebKit tidak bisa dipasang karena CDN Playwright diblokir, jadi Safari, Firefox, dan ponsel asli diuji oleh FaL (Sesi 13).
+- **Browser:** di container hanya Chromium yang bisa dipakai, karena CDN Playwright untuk Firefox dan WebKit diblokir. Firefox dan WebKit berjalan di CI GitHub Actions sebagai job informasi (T5). Safari dan Chrome di ponsel asli diuji oleh FaL (Sesi 13).
 - **Teks UI** selalu lewat `en.json` dan `id.json`. Nama menu dan section, judul kartu Features, serta tombol Create dan Preview tetap English di kedua file.
 
 ---
@@ -66,7 +105,7 @@ Total 13 sesi. Urutan Pola, Warna, lalu Perangkat kupertahankan.
 
 ### Sesi 1: Rute, bahasa, dan tema
 
-**ID:** NAV-10, NAV-11, THM-01, THM-02, THM-04, THM-06, rute `/404` (tabel rute Bagian 6), NFR Bahasa (mekanisme file terjemahan), NFR Keamanan (hash skrip inline di CSP), NFR SEO (title dan meta description per halaman).
+**ID:** NAV-10, NAV-11, THM-01, THM-02, THM-04, THM-06, rute `/404` (tabel rute Bagian 6), NFR Bahasa (mekanisme file terjemahan), NFR Keamanan (hash skrip inline di CSP), NFR SEO (title dan meta description per halaman), Q7 (URL produksi), CI (T5).
 
 **Wireframe:** tidak ada gambar khusus; halaman Home dan Create masih kerangka.
 
@@ -83,16 +122,20 @@ Total 13 sesi. Urutan Pola, Warna, lalu Perangkat kupertahankan.
 | `src/lib/i18n/en.json`, `id.json`, `index.ts` | Kamus per bahasa dan fungsi `t()` dengan `{placeholder}`; hanya bahasa aktif yang dimuat (NFR Bahasa) |
 | `src/routes/[lang=lang]/+layout.ts`, `+layout.svelte` | Memuat kamus bahasa aktif; `hreflang` untuk en, id, dan `x-default`; title dan description |
 | `src/routes/+page.svelte`, `src/routes/create/+page.svelte` | Halaman pengalih dengan tautan English dan Indonesia di `noscript` |
-| `src/routes/404.html/` | Halaman 404 prerender dalam bahasa tersimpan, cadangan English; cara Vercel menyajikannya dicek di link Preview |
-| `vercel.json` | Header `frame-ancestors` (pertanyaan 9) |
+| `src/lib/site.ts` | `SITE_URL = 'https://falette.vercel.app'`, satu-satunya tempat URL produksi, dipakai `hreflang` lalu sitemap dan Open Graph (jawaban 5) |
+| `src/routes/404.html/` | Halaman 404 prerender dalam bahasa tersimpan, cadangan English, dengan `trailingSlash = 'never'` sendiri supaya build menulis `404.html` (T1) |
+| `vercel.json` | Header `frame-ancestors 'none'` (pertanyaan 9) |
+| `.github/workflows/ci.yml` | Untuk setiap PR: job wajib `npm run check`, `npm run lint`, tes unit, `npm run build`, dan e2e Chromium; job informasi e2e Firefox dan WebKit (`PW_BROWSERS=all`) yang boleh gagal sampai Sesi 13 (T5) |
 | `tests/i18n.test.ts`, `tests/tokens.test.ts` | Kunci dan placeholder en dan id sama; kontras token ≥ 4,5:1 di kedua tema |
 | `tests/site.e2e.ts`, `tests/budget.e2e.ts`, `tests/helpers/` | Tes browser, anggaran JS, dan pemeriksa CSP |
-| `AGENTS.md` | Baris peta folder untuk tempat baru (pertanyaan 3) |
+| `AGENTS.md` | Baris peta folder untuk tempat baru, termasuk `.github/` (jawaban 3, T5) |
 
 **Uji otomatis:**
 
 - Unit: kedua kamus punya kunci dan placeholder yang sama; `t()` mengisi placeholder; pasangan warna teks dan latar di token lolos 4,5:1 (teks) dan 3:1 (komponen) di kedua tema.
-- Playwright: `/` dan `/create/#v=1&p=waves` dengan `locale` browser `id-ID` diarahkan ke `/id/…` dengan hash yang sama; `de-DE` ke `/en/`; pilihan tersimpan menang atas bahasa browser; tanpa JavaScript, tautan `noscript` terlihat; `<html lang>` benar di setiap rute; `hreflang` lengkap; tema mengikuti `colorScheme` yang diemulasi dan ikut berubah saat setelan sistem berubah; `data-theme` sudah terpasang sebelum `DOMContentLoaded`; tema tersimpan dipakai; path tak dikenal di server preview menampilkan 404; tidak ada pelanggaran CSP; anggaran JS.
+- Playwright: `/` dan `/create/#v=1&p=waves` dengan `locale` browser `id-ID` diarahkan ke `/id/…` dengan hash yang sama; `de-DE` ke `/en/`; pilihan tersimpan menang atas bahasa browser; tanpa JavaScript, tautan `noscript` terlihat; `<html lang>` benar di setiap rute; `hreflang` lengkap; tema mengikuti `colorScheme` yang diemulasi dan ikut berubah saat setelan sistem berubah; `data-theme` sudah terpasang sebelum `DOMContentLoaded`; tema tersimpan dipakai; path tak dikenal di server preview menampilkan 404; build menulis `404.html`, bukan `404.html/index.html`; `hreflang` memakai `SITE_URL`; tidak ada pelanggaran CSP; anggaran JS.
+- Di link Preview Vercel (T1): path asal-asalan menampilkan 404 Falette, bukan 404 bawaan Vercel, dan `curl -I` menunjukkan header `frame-ancestors`. Keduanya dicatat di laporan beserta keluaran `curl`.
+- CI: workflow berjalan di PR Sesi 1 sendiri. Agar job wajib benar-benar menjadi syarat merge, FaL perlu memasang aturan branch (ruleset) di pengaturan repositori GitHub, karena aku tidak bisa mengubah pengaturan itu. Langkahnya kutulis di laporan.
 
 **Yang bisa FaL cek:** buka link Preview Vercel di ponsel: `/` pindah ke `/id/` bila bahasa ponsel Indonesia; `/create/#coba` pindah ke `/id/create/#coba`; ganti mode gelap di setelan ponsel, halaman ikut berubah tanpa berkedip saat dimuat ulang; buka path asal-asalan untuk melihat 404.
 
@@ -138,18 +181,20 @@ Total 13 sesi. Urutan Pola, Warna, lalu Perangkat kupertahankan.
 - SvelteKit 3.0.1 menandai `replaceState` dari `$app/navigation` sebagai usang dan menyarankan `goto(url, { shallow: true, replace: true })`. Cara ini tetap memakai `history.replaceState` di baliknya, jadi tidak menambah riwayat (SHR-01).
 - HTML prerender Create berisi kerangka dengan area preview berukuran tetap. Desainnya baru muncul setelah JavaScript berjalan, karena bergantung pada hash dan layar pengunjung.
 - Preview ditampilkan sebagai `<img>` dengan data URI dari string SVG yang sama dengan ekspor. Bila pengukuran ENG-07 menunjukkan SVG inline lebih cepat, aku melaporkannya dulu sebelum mengganti caranya.
-- Sampai Sesi 8, tampilan `pair` selalu Berdampingan, juga di ponsel.
+- Sampai Sesi 8, tampilan `pair` selalu Berdampingan, juga di ponsel. Susunannya kiri-kanan atau atas-bawah, dipilih yang membuat kedua gambar lebih besar di area preview (jawaban 17).
 
 **Uji otomatis:**
 
 - Unit: setiap preset dikenali dari ukuran layarnya sendiri; contoh device nyata (iPhone dengan DPR 3, laptop dengan scaling OS) jatuh ke preset yang diharapkan; 12 palet berisi 1–5 HEX sah dengan nama di kedua kamus.
 - Playwright: Create tanpa hash menulis `v`, `p=arcs`, seed, palet Senja, `bg=auto`, `m=pair`, `d` hasil deteksi, dan `x`; `history.length` tidak bertambah saat desain berubah; memuat ulang menghasilkan SVG yang sama; menempel hash lain di tab yang sama memuat desain baru; `p=tidak-ada` dan `v=2` menampilkan kotak pemberitahuan yang bisa ditutup; `screen` dan `deviceScaleFactor` yang diemulasi menentukan `d`.
+- Hash yang ditulis Create sendiri tidak memicu muat ulang desain: jumlah render tidak bertambah, dan fokus serta posisi scroll tidak berubah saat hash ditulis (T3).
+- Berdampingan memakai kiri-kanan untuk `ios-63`, atas-bawah untuk `desk-uw`, dan susunan yang memberi gambar lebih besar untuk Custom mendekati persegi, mis. `w=1200&h=1000` (jawaban 17).
 
 **Yang bisa FaL cek:** buka Create di ponsel dan lihat `d=` di URL sesuai ponsel itu; ubah `s=` di URL secara manual; tempel link dengan `p=asal` untuk melihat pemberitahuan.
 
 ### Sesi 4: Tata letak Create, Acak, dan Unduh
 
-**ID:** Bagian 8.1, PAT-04, EXP-01, EXP-04 (varian sesuai tampilan), EXP-05, DEV-02 (nama preset di kamus dengan ID preset sebagai kunci), NFR Aksesibilitas (akordeon dan lembar dari bawah).
+**ID:** Bagian 8.1, PAT-04, EXP-01, EXP-04 (varian sesuai tampilan), EXP-05, EXP-07 (indikator proses), DEV-02 (nama preset di kamus dengan ID preset sebagai kunci), NFR Aksesibilitas (akordeon dan lembar dari bawah).
 
 **Wireframe:** `create-layout.png`, `create-mobile.png`.
 
@@ -163,8 +208,9 @@ Isi kelima bagian masih kosong sampai sesinya masing-masing, tetapi judul baris 
 - Ponsel dan tablet (390 dan 800 px): lima kartu dengan visual kecil; mengetuk kartu membuka lembar, fokus pindah ke dalamnya, preview tetap terlihat; Selesai, Esc, dan geser ke bawah menutup lembar; fokus kembali ke kartu asal (NFR Aksesibilitas, pertanyaan 16).
 - Acak hanya mengganti `s` di hash; tombol R melakukan hal yang sama, kecuali saat fokus di isian teks (PAT-04).
 - Unduh menghasilkan PNG berdimensi preset dengan nama `falette-{pola}-{mode}-{lebar}x{tinggi}-{seed}.png` (EXP-01, EXP-05).
+- Selama Unduh berjalan, tombolnya nonaktif dan menampilkan indikator proses. Bila PNG terlalu besar (mis. `w=7680&h=4320` dengan batas Safari iOS yang ditiru) atau gagal, satu baris teks dari tabel teks ekspor PRD muncul tanpa tombol tawaran; kotak lengkap menyusul di Sesi 10 (T4).
 
-**Yang bisa FaL cek:** di ponsel, ketuk kartu dan geser lembar ke bawah; tekan Acak beberapa kali; Unduh PNG lalu cek ukurannya di Files.
+**Yang bisa FaL cek:** di ponsel, ketuk kartu dan geser lembar ke bawah; tekan Acak beberapa kali; Unduh PNG lalu cek ukurannya di Files. Laporan Sesi 4 memuat langkah uji ekspor di iPhone: ukuran hasil deteksi, `d=desk-5k` (14,7 MP), `w=7680&h=4320` (33,2 MP, di atas batas Safari iOS), dan `p=gradient` untuk melihat banding (Q11, T4).
 
 ### Sesi 5: Panel Pola
 
@@ -191,10 +237,12 @@ Isi kelima bagian masih kosong sampai sesinya masing-masing, tetapi judul baris 
 
 **File:** `ColorPanel.svelte`, `PaletteList.svelte`, `ColorSlots.svelte`, `ColorPicker.svelte` (pertanyaan 20), `src/lib/palettes/harmony.ts` (Acak palet di OKLCH, menerima sumber acak sebagai parameter supaya bisa diuji), kamus.
 
+Nama palet di ringkasan dicocokkan dari `pal` saja, dengan warna dan urutan sama persis; `bg` tidak memengaruhi nama (jawaban 12). Bila sesi ini terlalu besar, color picker dipisah menjadi PR sendiri sebelum atau sesudah bagian lain panel Warna, dan rencana sesi menyebutnya (jawaban 20).
+
 **Uji otomatis:**
 
 - Unit: harmoni analog, komplementer, dan triadik menghasilkan rona dengan jarak yang benar; jumlah slot dipertahankan (COL-02); semua HEX sah setelah penyesuaian gamut.
-- Playwright: memilih palet mengubah `pal` dan `bg` serta nama di ringkasan; mengubah satu slot membuat ringkasan menjadi Kustom; slot bisa ditambah sampai 5 dan dihapus sampai 1; belahan terang dan gelap tiap slot sama dengan hasil engine; slot tak terpakai redup; Latar Manual menampilkan kotak warna dan peringatan saat terlalu mirip; R tidak memicu Acak di isian HEX; di ponsel, fokus di isian HEX menyembunyikan baris Acak dan Unduh.
+- Playwright: memilih palet mengubah `pal` dan `bg` serta nama di ringkasan; mengubah satu slot membuat ringkasan menjadi Kustom, sedangkan mengganti Latar saja tidak mengubah nama; slot bisa ditambah sampai 5 dan dihapus sampai 1; belahan terang dan gelap tiap slot sama dengan hasil engine; slot tak terpakai redup; Latar Manual menampilkan kotak warna dan peringatan saat terlalu mirip; R tidak memicu Acak di isian HEX; di ponsel, fokus di isian HEX menyembunyikan baris Acak dan Unduh.
 
 **Yang bisa FaL cek:** pakai color picker dengan jari di ponsel; nilai apakah ke-12 palet enak dilihat di keempat pola, terang dan gelap.
 
@@ -221,7 +269,7 @@ Di wireframe ponsel, baris kategori hanya menampilkan Ponsel, Tablet, dan Laptop
 
 **Wireframe:** `panel-mode.png` (bagian MVP), `create-layout.png`, `create-mobile.png`.
 
-**File:** `ModePanel.svelte`, `CompareSlider.svelte` (peran ARIA `slider`, panah kiri dan kanan, Home, End), `Preview.svelte` (empat tampilan, pertanyaan 17), kamus.
+**File:** `ModePanel.svelte`, `CompareSlider.svelte` (peran ARIA `slider`, panah kiri dan kanan, Home, End; posisi garis dipasang lewat JavaScript, bukan atribut `style`, T2), `Preview.svelte` (empat tampilan, susunan Berdampingan menurut jawaban 17), kamus.
 
 **Uji otomatis (Playwright):**
 
@@ -242,8 +290,8 @@ Di wireframe ponsel, baris kategori hanya menampilkan Ponsel, Tablet, dan Laptop
 
 **Uji otomatis:**
 
-- Unit: templat untuk ke-28 preset sesuai Lampiran A; ukuran Custom potret, mendekati persegi, dan lanskap mendapat templat yang benar; format jam en dan id dengan tanggal tetap (pertanyaan 29).
-- Playwright: overlay ada di preview tetapi tidak ada di SVG dan PNG unduhan (PRV-01, prinsip 3); jam berganti tepat di pergantian menit dengan `page.clock`; font jam berasal dari file OFL; tangkapan layar overlay di 6 preset perwakilan, terang dan gelap, untuk laporan.
+- Unit: templat untuk ke-28 preset sesuai Lampiran A; ukuran Custom potret, mendekati persegi, dan lanskap mendapat templat yang benar; format jam en dan id dengan tanggal tetap, jam besar tanpa AM/PM, dan id-ID dengan titik ("9.41") (jawaban 29).
+- Playwright: overlay ada di preview tetapi tidak ada di SVG dan PNG unduhan (PRV-01, prinsip 3); jam berganti tepat di pergantian menit dengan `page.clock`; font jam berasal dari file OFL; tangkapan layar overlay di 6 preset perwakilan, terang dan gelap, untuk laporan, termasuk jam id-ID seperti "9.41" (jawaban 29).
 
 **Yang bisa FaL cek:** bandingkan preview dengan lock screen ponsel dan laptop FaL sendiri; tunggu pergantian menit.
 
@@ -272,12 +320,14 @@ Di wireframe ponsel, baris kategori hanya menampilkan Ponsel, Tablet, dan Laptop
 
 Di sesi ini mockup hero masih diam di frame pertama. Pergantian otomatis menyusul di Sesi 12.
 
+Kartu Features berisi judul English dan satu kalimat pendek yang diterjemahkan (jawaban 33). Footer memakai teks dari jawaban 34 dengan tahun dari waktu build, tanpa tautan repositori.
+
 **Uji otomatis (Playwright):**
 
 - Urutan Hero, Preview (`#preview`), Features (`#features`), FAQ (`#faq`), lalu Footer.
 - Di 390 × 844 dan 360 × 640, navbar dan hero mengisi tepat 100svh, dengan judul, mockup, dan kedua tombol terlihat tanpa scroll (HOME-03).
 - Tombol Create menuju `/id/create/`, Preview ke `#preview`; judul section tidak tertutup navbar (HOME-15).
-- Features 3 kolom di 1280 px, 2 di 800 px, dan 1 di 390 px; FAQ bisa dibuka dengan keyboard; footer lolos kontras 4,5:1.
+- Features 3 kolom di 1280 px, 2 di 800 px, dan 1 di 390 px; FAQ bisa dibuka dengan keyboard; footer berisi teks jawaban 34 dengan tahun build dan lolos kontras 4,5:1.
 - HTML mentah tanpa JavaScript sudah berisi SVG mockup versi Terang dan Gelap, dan CSS menampilkan yang sesuai tema.
 
 **Yang bisa FaL cek:** layar pertama Home di ponsel; baca teks FAQ dalam kedua bahasa.
@@ -305,12 +355,12 @@ Di sesi ini mockup hero masih diam di frame pertama. Pergantian otomatis menyusu
 
 **Wireframe:** `roadmap.png`.
 
-**File:** `static/sitemap.xml`, gambar Open Graph (pertanyaan 37), perbaikan dari temuan, dan daftar periksa di `docs/laporan/fase-1b/13-rilis/`.
+**File:** `static/sitemap.xml` dengan URL dari `SITE_URL`, gambar Open Graph yang dibuat sekali dengan Playwright yang sudah terpasang tanpa dependensi baru (jawaban 37), perbaikan dari temuan, dan daftar periksa di `docs/laporan/fase-1b/13-rilis/`.
 
 **Uji:**
 
 - Otomatis: axe di semua halaman, kedua tema, dan kedua bahasa; tanpa scroll horizontal di 360–2560 px; anggaran JS; tidak ada cookie yang ditulis dan tidak ada permintaan ke domain lain.
-- FaL: Lighthouse lewat PageSpeed Insights pada link Preview Vercel; daftar periksa P0 di Safari iOS, Chrome Android, serta Chrome, Edge, Firefox, dan Safari desktop (pertanyaan 38); SVG dibuka di Figma, Illustrator, dan Inkscape (G2); waktu dari membuka Create sampai unduhan pertama (G1).
+- FaL: Lighthouse lewat PageSpeed Insights pada link Preview Vercel; daftar periksa P0 di Safari iOS, Chrome Android, serta Chrome, Edge, Firefox, dan Safari desktop, sesuai device yang FaL sebutkan sebelum sesi ini (pertanyaan 38); job CI Firefox dan WebKit harus lulus mulai sesi ini (T5); SVG dibuka di Figma, Illustrator, dan Inkscape (G2); waktu dari membuka Create sampai unduhan pertama (G1).
 
 ---
 
@@ -319,17 +369,17 @@ Di sesi ini mockup hero masih diam di frame pertama. Pergantian otomatis menyusu
 1. **SHR-01 menyebut `replaceState`.** Di SvelteKit 3.0.1 yang terpasang, `replaceState` dari `$app/navigation` sudah usang; penggantinya `goto(url, { shallow: true, replace: true })`. Maksud PRD tetap terpenuhi karena riwayat browser tidak bertambah. Saran di laporan link untuk memakai `replaceState` dari `$app/navigation` diganti dengan cara ini.
 2. **HOME-07 dan `writeLink`.** HOME-07 meminta link dari Home tanpa `d` dan tanpa `m`. `writeLink` sudah bisa melewatkan `d` (`device: null`), tetapi selalu menulis `m`. Sesi 12 perlu mengubah `src/lib/share/link.ts` sedikit, mis. `mode: null` berarti `m` tidak ditulis, beserta tesnya. Engine dan snapshot tidak tersentuh.
 3. **Satu kebutuhan per sesi.** AGENTS.md meminta satu kebutuhan PRD atau satu pola per sesi, sedangkan beberapa sesi di sini mencakup beberapa ID. Ini sesuai permintaan FaL untuk membagi per bagian; setiap PR tetap kecil.
-4. **Peta folder AGENTS.md** belum memuat `src/hooks.server.ts`, `src/lib/inline/`, `src/lib/palettes/`, `src/lib/components/create/`, `src/routes/404.html/`, dan `vercel.json` (pertanyaan 3).
-5. **HOME-09 dan wireframe.** HOME-09 meminta satu kalimat per kartu Features, sedangkan wireframe memakai frasa pendek seperti "Semua di browser" (pertanyaan 33).
-6. **Label Salin di EXP-03.** EXP-03 menyebut "tombol Salin", wireframe Ekspor menulis "Salin kode". Aku memakai "Salin kode" dari wireframe karena lebih jelas di samping tombol Salin link.
+4. **Peta folder AGENTS.md** belum memuat `src/hooks.server.ts`, `src/lib/inline/`, `src/lib/palettes/`, `src/lib/components/create/`, `src/routes/404.html/`, dan `vercel.json` (pertanyaan 3). **Diputuskan:** ditambahkan di sesi yang pertama memakainya, bersama `src/lib/site.ts` dan `.github/` (jawaban 3 dan 5, T5).
+5. **HOME-09 dan wireframe.** HOME-09 meminta satu kalimat per kartu Features, sedangkan wireframe memakai frasa pendek seperti "Semua di browser" (pertanyaan 33). **Diputuskan:** satu kalimat pendek per kartu, karena PRD yang berlaku (jawaban 33).
+6. **Label Salin di EXP-03.** EXP-03 menyebut "tombol Salin", wireframe Ekspor menulis "Salin kode". Aku memakai "Salin kode" dari wireframe karena lebih jelas di samping tombol Salin link. **Selesai:** EXP-03 di PRD sekarang menulis tombol "Salin kode" (Copy code).
 7. **Warna di wireframe hanya ilustrasi.** Di `panel-mode.png` dan `panel-warna.png`, versi Terang tampak pastel dan versi Gelap pekat. Engine (MODE-02) memakai warna palet apa adanya di varian Terang dan menurunkan varian Gelap, jadi panel akan menampilkan warna dari engine yang berbeda dari gambar.
-8. **Domain (Q7) masih terbuka,** padahal `hreflang` (NAV-11, P0) dan sitemap butuh URL lengkap (pertanyaan 5). Aku tidak bisa membaca pengaturan domain proyek Vercel dari sini karena aksesnya ditolak.
+8. **Domain (Q7) masih terbuka,** padahal `hreflang` (NAV-11, P0) dan sitemap butuh URL lengkap (pertanyaan 5). Aku tidak bisa membaca pengaturan domain proyek Vercel dari sini karena aksesnya ditolak. **Selesai:** Q7 diputuskan di PRD, `falette.vercel.app` (jawaban 5).
 
 ---
 
 ## 6. Pertanyaan untuk FaL
 
-Pilihan a adalah rekomendasiku. Pertanyaan dikelompokkan menurut sesi pertama yang membutuhkannya, jadi kelompok awal paling mendesak.
+Pilihan a adalah rekomendasiku. Pertanyaan dikelompokkan menurut sesi pertama yang membutuhkannya, jadi kelompok awal paling mendesak. Jawaban FaL ada di [Keputusan FaL](#keputusan-fal).
 
 ### Sebelum Sesi 1
 
@@ -431,6 +481,5 @@ Untuk ENG-10: daftar pola ringan tetap dibuat di Sesi 3 karena ENG-03 dan AGENTS
 
 ## 8. Setelah disetujui
 
-1. Draft PR ini (rencana saja) digabung setelah FaL menyetujui, dengan catatan persetujuan ditambahkan di bagian atas file ini.
-2. Sesi 1 dimulai dari main terbaru dengan rencana singkat dan tabel teks UI, sesuai jawaban pertanyaan 1 dan 2.
-3. Jawaban FaL yang mengubah urutan atau isi sesi dicatat di file ini sebelum Sesi 1 dimulai.
+1. PR #13 berisi rencana ini, catatan persetujuan dan keputusan FaL, serta pembaruan `docs/PRD.md` (Q7, EXP-03, dan kalimat di atas tabel Pertanyaan terbuka). FaL yang menggabungkannya.
+2. Setelah PR #13 digabung, Sesi 1 dimulai dari main terbaru dengan `docs/laporan/fase-1b/01-rute-bahasa-tema/rencana.md` berisi rencana singkat dan tabel teks ID/EN, lalu menunggu persetujuan sebelum kode ditulis.
