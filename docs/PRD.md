@@ -252,7 +252,7 @@ Tombol Unduh mengunduh format dan varian yang dipilih di panel ini. Defaultnya P
 | --- | --- | --- |
 | EXP-01 | PNG berdimensi persis sesuai preset atau ukuran custom (SVG → canvas → `toBlob`, atau `convertToBlob` di worker) | P0 |
 | EXP-02 | SVG self-contained: tanpa font atau gambar eksternal, `width`/`height` dan `viewBox` sesuai ukuran, angka dibulatkan maksimal 2 desimal | P0 |
-| EXP-03 | Panel kode SVG dengan tombol Salin serta pilihan Rapi atau Ringkas (minify); setelah menyalin, label tombol berganti menjadi Disalin (Copied) selama 2 detik, seperti Salin link (SHR-02) | P0 |
+| EXP-03 | Panel kode SVG dengan tombol "Salin kode" (Copy code) serta pilihan Rapi atau Ringkas (minify); setelah menyalin, label tombol berganti menjadi Disalin (Copied) selama 2 detik, seperti Salin link (SHR-02) | P0 |
 | EXP-04 | Unduh varian Terang atau Gelap secara terpisah | P0 |
 | EXP-05 | Nama file `falette-{pola}-{mode}-{lebar}x{tinggi}-{seed}.{ext}` | P0 |
 | EXP-06 | Batas PNG mengikuti kemampuan browser (Safari iOS sekitar 16,7 MP); bila terlampaui, tawarkan skala lebih kecil atau SVG | P0 |
@@ -393,7 +393,7 @@ Risiko terbesar ada di ekspor PNG pada iPhone dan konsistensi hasil saat algorit
 
 ## 16. Pertanyaan terbuka
 
-Keputusan yang dibutuhkan sebelum Fase 1 sudah lengkap: Q2 (stack) dan Q8 (preset) sudah diputuskan, sedangkan Q3, Q6, Q7, Q10, dan Q11 bisa menyusul. Kolom Usulan berisi rekomendasi awal, atau keputusan bila statusnya Diputuskan.
+Keputusan yang dibutuhkan sebelum Fase 1 sudah lengkap: Q2 (stack), Q7 (domain), dan Q8 (preset) sudah diputuskan, sedangkan Q3, Q6, Q10, dan Q11 bisa menyusul. Kolom Usulan berisi rekomendasi awal, atau keputusan bila statusnya Diputuskan.
 
 | ID | Pertanyaan | Usulan | Status |
 | --- | --- | --- | --- |
@@ -403,7 +403,7 @@ Keputusan yang dibutuhkan sebelum Fase 1 sudah lengkap: Q2 (stack) dan Q8 (prese
 | Q4 | Lisensi hasil wallpaper dan kode? | Wallpaper CC0 (bebas dipakai, termasuk komersial); kode MIT bila dibuka sebagai open source | Diputuskan |
 | Q5 | Bahasa situs? | English dan Indonesia di MVP, tujuh bahasa lain di Fase 2 (NAV-09, NAV-12), dengan cadangan English | Diputuskan |
 | Q6 | Pakai efek lapisan (grain, scanlines, light leaks)? | Tidak di MVP; di Fase 3 menjadi lapisan opsional yang ikut tersimpan di link (kunci fx di Lampiran B) | Terbuka |
-| Q7 | Domain? | Subdomain gratis dari hosting dulu | Terbuka |
+| Q7 | Domain? | Subdomain Vercel falette.vercel.app dulu; domain sendiri bisa menyusul | Diputuskan |
 | Q8 | Daftar preset final? | 28 preset: 26 di Lampiran A ditambah tablet Android 16:10 dan laptop 16:10. Overlay jam memakai 5 templat menurut OS, pemeriksaan visual pola memakai 6 preset perwakilan, dan preset baru hanya dibuat untuk resolusi baru (Lampiran A) | Diputuskan |
 | Q9 | Create bergaya tombol aksen di navbar? | Ya, sebagai ajakan utama | Diputuskan |
 | Q10 | 16 pola Piksel dan Glyph di Katalog Pola dirilis khusus PNG, ditunda, atau dibuang? | Tunda sampai setelah Fase 3. Pola Glyph tetap bisa SVG bila hurufnya disimpan sebagai path; pola Piksel butuh jalur render canvas tersendiri karena engine dan ekspor PNG berbasis SVG (ENG-01, EXP-01) | Terbuka |
