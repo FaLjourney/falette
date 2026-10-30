@@ -1,8 +1,30 @@
 # Sesi 1: Rute, bahasa, dan tema — rencana
 
-Sesi 1 dari [rencana Fase 1b](../rencana.md). **Status:** menunggu persetujuan FaL. Belum ada kode.
+Sesi 1 dari [rencana Fase 1b](../rencana.md).
+
+**Disetujui:** FaL menyetujui rencana ini dengan jawaban dan perubahan di [Keputusan FaL](#keputusan-fal). Bagian di bawahnya sudah disesuaikan.
 
 **Pengecekan awal:** main sudah memuat PR #13 (`b3b2744`). Branch `claude/charming-albattani-ms0114` dimulai ulang dari main itu.
+
+---
+
+## Keputusan FaL
+
+| No. | Hal | Keputusan |
+| --- | --- | --- |
+| 1 | Font di Sesi 1 | Setuju |
+| 2 | Cadangan adapter | Setuju. Dipakai langsung di PR ini bila link Preview membuktikan 404 bawaan Vercel atau header `frame-ancestors` tidak terkirim, dengan bukti di laporan. Bila `vercel.json` terbukti diabaikan, laporan menyebutnya; NFR Keamanan di PRD diperbarui FaL secara terpisah. |
+| 3 | 404 tanpa JavaScript aplikasi | Setuju, dengan perubahan P1 |
+| 4 | Teks | Setuju, dengan perubahan P5 |
+
+| No. | Perubahan |
+| --- | --- |
+| P1 | `paths.relative` bawaan SvelteKit 3.0.1 adalah `true`, jadi build menulis path relatif (`./_app/…`, `../_app/…`). Vercel menyajikan isi `404.html` di URL yang diminta, mis. `/id/tidak-ada/`, sehingga CSS dan tautan relatif salah arah: CSS tidak termuat dan kedua bahasa tampil bersamaan. Karena itu `paths: { relative: false }` dipasang di `sveltekit()`. Uji: `build/404.html` disajikan di path bertingkat lewat `page.route` dengan status 404, lalu dipastikan CSS termuat, hanya satu bahasa terlihat, dan tautan Home dan Create menuju `/en/…` atau `/id/…`. Di link Preview, path bertingkat juga dicek. |
+| P2 | Meta CSP adalah elemen pertama di `%sveltekit.head%`, disusul link CSS. Skrip inline setelah link CSS menunggu CSS selesai diunduh, jadi pengalih ikut tertunda. Ketiga skrip disisipkan tepat setelah meta CSP, tetap di bawahnya sehingga diatur CSP, dan sebelum link CSS. |
+| P3 | Pengalih mempertahankan query: path baru + `location.search` + `location.hash`. |
+| P4 | `hreflang` per halaman: Home (`/en/`, `/id/`, `x-default` `/`) dan Create (`/en/create/`, `/id/create/`, `x-default` `/create/`). Halaman pengalih `/` dan `/create/` memuat set yang sama dengan pasangannya. Keduanya diuji. |
+| P5 | Teks `meta.home.description` dan `meta.create.description` (ID) diganti, lihat [Teks ID/EN](#teks-iden). Teks Indonesia memakai ragam netral tanpa "kamu" atau "Anda", seperti teks di PRD; sesi berikutnya ikut aturan ini. |
+| P6 | Listener tema membaca `falette:theme` setiap kali setelan sistem berubah, bukan sekali saat halaman dimuat, supaya pilihan dari toggle di Sesi 2 langsung menghentikannya. Uji `node:vm` menambah kasus: pilihan disimpan setelah halaman dimuat, lalu setelan sistem berubah, dan tema tidak ikut berubah. |
 
 ---
 
@@ -24,19 +46,19 @@ Home dan Create masih kerangka: hanya judul halaman dari kamus, dengan token war
 
 | File | Isi |
 | --- | --- |
-| `src/app.html` | Penanda `lang` di `<html>` dan tempat skrip inline setelah `%sveltekit.head%`, supaya skrip berada di bawah meta CSP |
-| `src/hooks.server.ts` | Hanya berjalan saat prerender: mengisi `lang` dan menyisipkan skrip inline sesuai rute |
-| `src/lib/inline/theme.js` | Semua halaman. Membaca `falette:theme` dari `localStorage` (try/catch), atau `prefers-color-scheme` bila kosong; memasang `data-theme`; mengikuti perubahan setelan sistem selama belum ada pilihan tersimpan (THM-02, THM-04) |
-| `src/lib/inline/lang-redirect.js` | `/` dan `/create/`. Memilih `falette:lang` yang tersimpan, atau bahasa pertama di `navigator.languages` yang didukung, atau English; lalu `location.replace` dengan hash utuh (NAV-10, NAV-11) |
+| `src/app.html` | Penanda `lang` di `<html>` |
+| `src/hooks.server.ts` | Berjalan saat prerender dan `npm run dev`, tidak di Vercel: mengisi `lang` dan menyisipkan skrip inline sesuai rute, tepat setelah meta CSP dan sebelum link CSS (P2) |
+| `src/lib/inline/theme.js` | Semua halaman. Membaca `falette:theme` dari `localStorage` (try/catch), atau `prefers-color-scheme` bila kosong; memasang `data-theme`; mengikuti perubahan setelan sistem selama belum ada pilihan tersimpan, yang dibaca ulang setiap kali setelan berubah (THM-02, THM-04, P6) |
+| `src/lib/inline/lang-redirect.js` | `/` dan `/create/`. Memilih `falette:lang` yang tersimpan, atau bahasa pertama di `navigator.languages` yang didukung, atau English; lalu `location.replace` dengan query dan hash utuh (NAV-10, NAV-11, P3) |
 | `src/lib/inline/lang-404.js` | Halaman 404. Memasang `lang` dan judul sesuai bahasa tersimpan, dengan cadangan English |
-| `vite.config.ts` | Hash SHA-256 ketiga skrip, dibaca dari file yang sama, ditambahkan ke `script-src` |
+| `vite.config.ts` | Hash SHA-256 ketiga skrip, dibaca dari file yang sama, ditambahkan ke `script-src`; `paths: { relative: false }` (P1) |
 | `src/app.css` | Token warna, jarak, radius, dan tipografi; `[data-theme="dark"]` menimpa token warna (THM-01) |
 | `src/lib/i18n/en.json`, `id.json`, `index.ts` | Kamus dan `t()` dengan `{placeholder}`; kunci bertipe dari `en.json`; modul kamus dimuat per bahasa, jadi browser hanya mengunduh bahasa aktif |
 | `src/lib/site.ts` | `SITE_URL = 'https://falette.vercel.app'` (jawaban 5) |
 | `src/routes/+layout.svelte` | Mengimpor `app.css` dan font |
-| `src/routes/[lang=lang]/+layout.ts`, `+layout.svelte` | Memuat kamus; `hreflang` en, id, dan `x-default`; memperbarui `lang` saat navigasi di browser |
-| `src/routes/[lang=lang]/+page.svelte`, `create/+page.svelte` | Title, description, dan judul halaman dari kamus |
-| `src/routes/+page.svelte`, `src/routes/create/+page.svelte`, dan `+page.ts` masing-masing | Pengalih dengan `csr = false`, jadi tanpa JavaScript aplikasi; tautan English dan Bahasa Indonesia di `noscript`; `/` bertanda `x-default` |
+| `src/routes/[lang=lang]/+layout.ts`, `+layout.svelte` | Memuat kamus; memperbarui `lang` saat navigasi di browser |
+| `src/routes/[lang=lang]/+page.svelte`, `create/+page.svelte` | Title, description, `hreflang` per halaman (P4), dan judul halaman dari kamus |
+| `src/routes/+page.svelte`, `src/routes/create/+page.svelte`, dan `+page.ts` masing-masing | Pengalih dengan `csr = false`, jadi tanpa JavaScript aplikasi; tautan English dan Bahasa Indonesia di `noscript`; `hreflang` sama dengan pasangannya (P4) |
 | `src/routes/404.html/+page.ts`, `+page.svelte` | `trailingSlash = 'never'` dan `csr = false`, sehingga build menulis `404.html`; teks kedua bahasa ada di HTML, dan yang tampil dipilih lewat atribut `lang` (T1) |
 | `vercel.json` | `Content-Security-Policy: frame-ancestors 'none'` untuk semua path |
 | `.github/workflows/ci.yml` | Job wajib `verify` (check, lint, tes unit, build) dan `e2e-chromium`; job informasi `e2e-firefox-webkit` dengan `continue-on-error` sampai Sesi 13 (T5) |
@@ -76,10 +98,10 @@ Teks dari PRD ditandai di kolom Asal; sisanya usulanku.
 | Kunci | Indonesia | English | Asal |
 | --- | --- | --- | --- |
 | `meta.home.title` | Falette · Wallpaper minimalis dari algoritma | Falette · Minimalist wallpapers from algorithms | HOME-01 |
-| `meta.home.description` | Buat wallpaper minimalis untuk ponsel, tablet, dan laptop di browser, lalu unduh PNG atau SVG. Gratis, tanpa akun. | Make minimalist wallpapers for your phone, tablet, and laptop in the browser, then download PNG or SVG. Free, no account. | Usulan |
+| `meta.home.description` | Buat wallpaper minimalis untuk ponsel, tablet, dan komputer di browser, lalu unduh PNG atau SVG. Gratis, tanpa akun. | Make minimalist wallpapers for your phone, tablet, and computer in the browser, then download PNG or SVG. Free, no account needed. | FaL (P5) |
 | `home.heading` | Wallpaper minimalis dari algoritma. | Minimalist wallpapers from algorithms. | HOME-01 |
 | `meta.create.title` | Create · Falette | Create · Falette | Nama halaman tetap English |
-| `meta.create.description` | Pilih perangkat, pola, dan warna, lalu unduh wallpaper-mu sebagai PNG atau SVG. Semua dibuat di browser. | Pick a device, pattern, and colors, then download your wallpaper as PNG or SVG. Everything is made in your browser. | Usulan |
+| `meta.create.description` | Pilih perangkat, pola, dan warna, lalu unduh wallpaper sebagai PNG atau SVG. Semua dibuat di browser. | Pick a device, pattern, and colors, then download your wallpaper as PNG or SVG. Everything is made in your browser. | ID dari FaL (P5), EN usulan |
 | `create.heading` | Create | Create | Nama halaman tetap English |
 | `notFound.title` | Halaman tidak ditemukan · Falette | Page not found · Falette | Usulan |
 | `notFound.heading` | Halaman tidak ditemukan | Page not found | Usulan |
@@ -96,15 +118,16 @@ Teks dari PRD ditandai di kolom Asal; sisanya usulanku.
 
 - `en.json` dan `id.json` punya kunci dan placeholder yang sama; `t()` mengisi placeholder.
 - Setiap pasangan di tabel token lolos batas kontrasnya di kedua tema.
-- Ketiga skrip inline dijalankan di `node:vm` dengan `localStorage`, `navigator`, `location`, dan `matchMedia` tiruan, termasuk saat `localStorage` melempar error. Dengan begitu yang diuji adalah teks skrip yang sama persis dengan yang di-hash.
+- Ketiga skrip inline dijalankan di `node:vm` dengan `localStorage`, `navigator`, `location`, dan `matchMedia` tiruan, termasuk saat `localStorage` melempar error. Dengan begitu yang diuji adalah teks skrip yang sama persis dengan yang di-hash. Untuk tema, ada kasus pilihan yang disimpan setelah halaman dimuat, lalu setelan sistem berubah, dan tema tidak ikut berubah (P6).
 
 **Playwright (Chromium)**
 
-- `/` dan `/create/#v=1&p=waves` dengan locale `id-ID` diarahkan ke `/id/` dan `/id/create/#v=1&p=waves`; `de-DE` ke `/en/`; `falette:lang=id` menang atas locale `en-US`.
+- `/` dan `/create/?a=1#v=1&p=waves` dengan locale `id-ID` diarahkan ke `/id/` dan `/id/create/?a=1#v=1&p=waves`, dengan query dan hash utuh (P3); `de-DE` ke `/en/`; `falette:lang=id` menang atas locale `en-US`.
+- Ketiga skrip inline berada tepat setelah meta CSP dan sebelum link CSS pertama (P2).
 - Tanpa JavaScript, kedua tautan `noscript` terlihat.
-- `<html lang>` benar di `/en/`, `/id/`, `/en/create/`, dan `/id/create/`. `hreflang` lengkap dan memakai `SITE_URL`.
+- `<html lang>` benar di `/en/`, `/id/`, `/en/create/`, dan `/id/create/`. `hreflang` memakai `SITE_URL`: Home dan `/` memuat `/en/`, `/id/`, dan `x-default` `/`; Create dan `/create/` memuat `/en/create/`, `/id/create/`, dan `x-default` `/create/` (P4).
 - Tema: saat `<body>` mulai dibuat, `data-theme` sudah terpasang (diperiksa lewat MutationObserver di init script). Tema ikut `colorScheme` yang diemulasi dan berubah saat setelan sistem berubah, kecuali ada `falette:theme` tersimpan.
-- `/404.html` berisi teks English, atau Indonesia bila `falette:lang=id`, dengan tautan ke Home dan Create dalam bahasa yang sama. Build menulis `build/404.html`, bukan `build/404.html/index.html`.
+- `build/404.html` disajikan di path bertingkat seperti `/id/tidak-ada/` lewat `page.route` dengan status 404 (P1): CSS termuat, hanya satu bahasa terlihat (English, atau Indonesia bila `falette:lang=id`), dan tautan Home dan Create menuju `/en/…` atau `/id/…`. Build menulis `build/404.html`, bukan `build/404.html/index.html`.
 - Tidak ada pelanggaran CSP di semua halaman, termasuk tidak ada atribut `style` di HTML prerender (T2).
 - JS awal ≤ 100 KB gzip di `/en/` dan ≤ 200 KB gzip di `/en/create/`. Semua skrip yang dimuat sampai jaringan tenang dijumlahkan.
 - axe (WCAG 2.2 AA) di semua halaman, dalam tema terang dan gelap.
@@ -113,7 +136,7 @@ Koreksi untuk rencana induk: server `vite preview` dijalankan SvelteKit, bukan V
 
 **Link Preview Vercel (T1)**, dicatat di laporan beserta keluaran `curl -I`:
 
-- Path asal-asalan mengembalikan status 404 dengan halaman 404 Falette.
+- Path asal-asalan satu tingkat dan bertingkat (mis. `/id/tidak-ada/`) mengembalikan status 404 dengan halaman 404 Falette, CSS termuat, dan hanya satu bahasa terlihat (P1).
 - Header `Content-Security-Policy: frame-ancestors 'none'` terkirim.
 
 **CI:** hasil ketiga job di PR ini, termasuk job Firefox dan WebKit.
@@ -126,11 +149,13 @@ Di link Preview Vercel dari komentar PR:
 
 - Di ponsel berbahasa Indonesia, `/` pindah ke `/id/`, dan `/create/#coba` pindah ke `/id/create/#coba`.
 - Ganti mode gelap di setelan ponsel: halaman ikut berubah tanpa dimuat ulang, dan tidak berkedip saat dimuat ulang.
-- Path asal-asalan menampilkan 404 Falette.
+- Path asal-asalan, juga yang bertingkat seperti `/id/tidak-ada/`, menampilkan 404 Falette dalam satu bahasa.
 
 ---
 
 ## Perlu persetujuan
+
+Sudah dijawab FaL di [Keputusan FaL](#keputusan-fal).
 
 1. **Font dipasang di Sesi 1,** bukan Sesi 9 seperti di tabel rencana induk, karena token tipografi dibuat di sini. Biayanya satu file 47 KB untuk en dan id.
 2. **Cadangan bila Vercel tidak mengikuti aturan.** `node_modules/@sveltejs/adapter-static/platforms.js` menulis `.vercel/output/config.json` tanpa aturan 404, jadi kemungkinan besar path asal-asalan masih menampilkan 404 bawaan Vercel. Kalau Preview membuktikan itu, atau header dari `vercel.json` tidak terkirim, aku membungkus adapter di `vite.config.ts` supaya menambahkan dua aturan ke `config.json`: header `frame-ancestors` dan `404.html` dengan status 404. Fungsi pengubahnya diuji di unit test. Bila `vercel.json` terbukti diabaikan, itu bertentangan dengan NFR Keamanan, yang menyebut `vercel.json`, dan akan kucatat di laporan. Boleh kupakai langsung di PR ini bila perlu?
