@@ -1,6 +1,16 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+
+/** CSP hashes of the inline scripts that src/hooks.server.ts adds to the pages (THM-04, NAV-11). */
+const inlineScriptHashes = ['theme', 'lang-redirect', 'lang-404'].map(
+	(name): `sha256-${string}` => {
+		const source = readFileSync(new URL(`./src/lib/inline/${name}.js`, import.meta.url), 'utf8');
+		return `sha256-${createHash('sha256').update(source).digest('base64')}`;
+	}
+);
 
 export default defineConfig({
 	plugins: [
@@ -11,11 +21,13 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			adapter: adapter(),
+			// Root-relative asset paths and links: Vercel serves 404.html at any requested path.
+			paths: { relative: false },
 			csp: {
 				mode: 'hash',
 				directives: {
 					'default-src': ['self'],
-					'script-src': ['self'],
+					'script-src': ['self', ...inlineScriptHashes],
 					// 'unsafe-hashes' allows only the exact inline style of SvelteKit's route announcer
 					'style-src': [
 						'self',

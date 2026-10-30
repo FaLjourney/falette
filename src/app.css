@@ -1,0 +1,64 @@
+/*
+ * Design tokens (THM-01). Components use only these for color, spacing, and radius.
+ * Contrast pairs are checked in tests/tokens.test.ts (THM-06).
+ */
+:root {
+	--color-bg: #ffffff;
+	--color-surface: #f3f3f1;
+	--color-text: #1b1b1a;
+	--color-text-muted: #5c5c58;
+	--color-accent: #1d6ad1;
+	--color-accent-soft: #e5eefb;
+	--color-border: #dcdcd8;
+	--color-border-strong: #8a8a85;
+
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 48px;
+	--space-8: 64px;
+
+	--radius-s: 6px;
+	--radius-m: 10px;
+	--radius-l: 16px;
+	--radius-pill: 999px;
+
+	--font-sans: 'Inter Variable', system-ui, sans-serif;
+	--text-s: 0.875rem;
+	--text-m: 1rem;
+	--text-l: 1.25rem;
+	--text-xl: 1.75rem;
+	--text-2xl: 2.5rem;
+}
+
+:root[data-theme='dark'] {
+	--color-bg: #131313;
+	--color-surface: #1f1f1e;
+	--color-text: #f1f1ef;
+	--color-text-muted: #a6a6a1;
+	--color-accent: #6ea6f5;
+	--color-accent-soft: #1b2b42;
+	--color-border: #353533;
+	--color-border-strong: #7c7c77;
+}
+
+body {
+	margin: 0;
+	background: var(--color-bg);
+	color: var(--color-text);
+	font-family: var(--font-sans);
+	font-size: var(--text-m);
+	line-height: 1.5;
+}
+
+a {
+	color: var(--color-accent);
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
+}
