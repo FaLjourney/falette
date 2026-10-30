@@ -99,9 +99,13 @@ Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/
 | --- | --- | --- |
 | `verify` (check, lint, unit, build) | Lulus | Lulus |
 | `e2e-chromium` | Lulus | Lulus |
-| `e2e-firefox-webkit` (informasi) | Dibatalkan, karena run 2 menggantikannya | Masih berjalan saat laporan ini ditulis, lebih dari 8 menit di langkah tes |
+| `e2e-firefox-webkit` (informasi) | Dibatalkan, karena run 2 menggantikannya | Gagal: 201 dari 202 tes lulus (8,6 menit) |
 
-Hasil job Firefox dan WebKit kutambahkan setelah selesai. Workflow membatalkan run lama di branch yang sama, jadi push laporan ini memulai run baru untuk kode yang sama.
+**Firefox dan WebKit (run 2).** Semua 52 tes baru Sesi 1 lulus di kedua browser. Satu-satunya yang gagal adalah tes Fase 1a, `[firefox] tests/export/png.e2e.ts:156` ("EXP-07: lets the page paint before the heavy work starts"). Tes itu mengharapkan penanda `painted` lebih kecil dari `started`, tetapi keduanya bernilai 155. Penyebabnya resolusi timer: Firefox membulatkan `performance.now()` (biasanya ke 1 ms), sehingga dua penanda dalam milidetik yang sama bernilai sama.
+
+Tes itu tidak disentuh PR ini dan baru pertama kali berjalan di Firefox lewat CI. Aku tidak mengubahnya, karena melonggarkan tes supaya lulus dilarang AGENTS.md, dan job ini memang boleh gagal sampai Sesi 13. Usulan untuk Sesi 13: bandingkan urutan kejadian, bukan stempel waktunya, atau terima nilai yang sama bila resolusi timer browser lebih kasar dari jarak keduanya.
+
+Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run baru. Job WebKit paling lama di `tests/export/timing.e2e.ts` (6,3 menit).
 
 **Supaya job wajib benar-benar menahan merge,** FaL perlu memasang ruleset di GitHub:
 
@@ -161,7 +165,7 @@ Home ponsel (Indonesia), terang dan gelap, 390 × 844:
 ## Belum diuji
 
 - Perilaku Vercel yang sebenarnya: 404 di path asal-asalan, termasuk yang bertingkat, dan header `frame-ancestors` (T1).
-- Firefox dan WebKit, menunggu job informasi di CI.
+- Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright sudah berjalan, dengan satu kegagalan Fase 1a (bagian CI).
 - Device asli: pengalih bahasa di ponsel, tema yang ikut berubah saat setelan sistem berubah, dan tidak adanya kedip saat dimuat ulang.
 - Path tak dikenal di server lokal. `vite preview` dijalankan SvelteKit, jadi 404 hanya diuji dengan menyajikan `404.html` lewat `page.route`.
 - Lighthouse, yang menunggu Sesi 13.
