@@ -76,15 +76,21 @@ Urutan awal Fase 1a:
 ## Peta folder
 
 ```
+.github/
+  workflows/      CI untuk setiap PR: check, lint, tes unit, build, dan e2e
 src/
+  app.css         token warna, jarak, radius, dan tipografi (THM-01)
+  hooks.server.ts hanya saat prerender: atribut lang dan skrip inline
   lib/
     engine/       render(), PRNG, warna OKLCH, utilitas SVG (tanpa Svelte)
     patterns/     satu file per pola (<id>.ts) dan daftar ringan: ID, nama, kategori
     export/       ekspor PNG dan SVG, kode SVG Rapi/Ringkas, nama file, dan worker PNG (tanpa Svelte)
     share/        link berbagi: menulis dan membaca hash URL (Lampiran B) (tanpa Svelte)
     presets/      presets.json (Lampiran A) dan 5 templat overlay
-    i18n/         en.json, id.json
+    i18n/         en.json, id.json, dan index.ts (memuat kamus per bahasa, t())
+    inline/       skrip inline kecil (tema, pengalih bahasa, bahasa 404) yang hash-nya diizinkan di CSP
     components/   komponen Svelte
+    site.ts       SITE_URL, URL produksi (Q7)
   params/
     lang.ts       pencocok parameter bahasa: en, id
   routes/
@@ -92,8 +98,11 @@ src/
     create/+page.svelte              pengalih bahasa di /create/
     [lang=lang]/+page.svelte         Home
     [lang=lang]/create/+page.svelte  Create
+    404.html/+page.svelte            halaman 404, ditulis sebagai 404.html
 tests/            tes unit, snapshot, dan browser
   harness/        halaman uji ekspor di browser untuk Playwright dan ponsel (tidak ikut ke situs)
+  helpers/        pembantu Playwright, mis. pemeriksa pelanggaran CSP
+vercel.json       header untuk Vercel (frame-ancestors)
 docs/
   PRD.md
   falette-100-pattern.md
