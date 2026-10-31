@@ -2,7 +2,7 @@
 
 Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) yang disetujui FaL dengan perubahan P1–P6. Branch `claude/charming-albattani-ms0114`, dari main `b3b2744`, di PR #14.
 
-**Status:** kode dan tes selesai, dan CI wajib hijau. Satu hal belum terbukti: perilaku 404 dan header `frame-ancestors` di link Preview Vercel (T1). Kebijakan jaringan environment ini memblokir `*.vercel.app`, jadi buktinya menunggu hasil `curl` dari FaL ([bagian T1](#link-preview-vercel-t1)).
+**Status:** kode dan tes selesai, dan CI wajib hijau. Tes EXP-07 dari Fase 1a yang gagal di Firefox dan WebKit sudah diperbaiki dengan izin FaL ([bagian CI](#ci)). Satu hal belum terbukti: perilaku 404 dan header `frame-ancestors` di link Preview Vercel (T1). Link Preview dilindungi Vercel Authentication, jadi FaL memeriksanya dari sisinya dan mengirim hasilnya menyusul ([bagian T1](#link-preview-vercel-t1)).
 
 ---
 
@@ -18,9 +18,10 @@ Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) 
 | `590c2d6` | `.github/workflows/ci.yml` | CI untuk setiap PR | T5 |
 | `9055632` | `AGENTS.md` | Baris peta folder untuk tempat baru | Jawaban 3, T5 |
 | `56f7167` | `*.png` | Tangkapan layar | |
+| `ec7dfdd` | `tests/export/png.e2e.ts` | Tes "lets the page paint before the heavy work starts" membandingkan urutan kejadian, bukan stempel waktu (izin FaL) | EXP-07 |
 | Commit laporan | `laporan.md` | Laporan ini | |
 
-Yang tidak disentuh: engine, pola, ekspor, link berbagi, preset, snapshot ENG-08, PRD, dan katalog. Versi engine tetap 1.
+Yang tidak disentuh: engine, pola, kode ekspor, link berbagi, preset, snapshot ENG-08, PRD, dan katalog. Versi engine tetap 1.
 
 ---
 
@@ -95,17 +96,29 @@ Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/
 
 ## CI
 
-| Job | Run 1 (`9055632`) | Run 2 (`56f7167`) |
-| --- | --- | --- |
-| `verify` (check, lint, unit, build) | Lulus | Lulus |
-| `e2e-chromium` | Lulus | Lulus |
-| `e2e-firefox-webkit` (informasi) | Dibatalkan, karena run 2 menggantikannya | Gagal: 201 dari 202 tes lulus (8,6 menit) |
+| Run | Commit | `verify` (check, lint, unit, build) | `e2e-chromium` | `e2e-firefox-webkit` (informasi) |
+| --- | --- | --- | --- | --- |
+| 1 | `9055632` | Lulus | Lulus | Dibatalkan, digantikan run 2 |
+| 2 | `56f7167` | Lulus | Lulus | Gagal: 201 dari 202 tes lulus (Firefox) |
+| 3 | `185b234` | Lulus | Tes lulus, job dibatalkan oleh run 4 | Dibatalkan, digantikan run 4 |
+| 4 | `a7e30e0` | Lulus | Lulus | Gagal: 200 dari 202 tes lulus (Firefox dan WebKit) |
+| 5 | `ec7dfdd` | Lulus | Lulus | Dibatalkan oleh push laporan ini |
 
-**Firefox dan WebKit (run 2).** Semua 52 tes baru Sesi 1 lulus di kedua browser. Satu-satunya yang gagal adalah tes Fase 1a, `[firefox] tests/export/png.e2e.ts:156` ("EXP-07: lets the page paint before the heavy work starts"). Tes itu mengharapkan penanda `painted` lebih kecil dari `started`, tetapi keduanya bernilai 155. Penyebabnya resolusi timer: Firefox membulatkan `performance.now()` (biasanya ke 1 ms), sehingga dua penanda dalam milidetik yang sama bernilai sama.
+Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run baru. Job WebKit paling lama di `tests/export/timing.e2e.ts` (sekitar 6 menit).
 
-Tes itu tidak disentuh PR ini dan baru pertama kali berjalan di Firefox lewat CI. Aku tidak mengubahnya, karena melonggarkan tes supaya lulus dilarang AGENTS.md, dan job ini memang boleh gagal sampai Sesi 13. Usulan untuk Sesi 13: bandingkan urutan kejadian, bukan stempel waktunya, atau terima nilai yang sama bila resolusi timer browser lebih kasar dari jarak keduanya.
+**Kegagalan Firefox dan WebKit (run 2 dan 4).** Semua 52 tes baru Sesi 1 lulus di kedua browser. Yang gagal hanya tes Fase 1a, `tests/export/png.e2e.ts:156` ("EXP-07: lets the page paint before the heavy work starts"). Tes itu mengharapkan stempel waktu `painted` lebih kecil dari `started`, tetapi keduanya bernilai sama: 155 dan 155 di Firefox, 82 dan 82 di WebKit. Penyebabnya, kedua browser membulatkan `performance.now()` ke sekitar 1 ms, sehingga dua kejadian dalam milidetik yang sama tampak bersamaan.
 
-Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run baru. Job WebKit paling lama di `tests/export/timing.e2e.ts` (6,3 menit).
+**Perbaikan (commit `ec7dfdd`, dengan izin FaL).** Tes sekarang mencatat kejadian ke satu array, lalu mengharapkan urutan `['painted', 'started', 'loaded']`:
+
+- `painted`: callback `requestAnimationFrame`
+- `started`: panggilan pertama `URL.createObjectURL`
+- `loaded`: penanda `falette:png:loaded`
+
+Maksud tesnya tetap: indikator sempat digambar sebelum kerja berat dimulai. Perbandingan kedua, `started` sebelum `loaded`, ikut diubah ke urutan, karena memakai stempel waktu yang sama dan bisa gagal dengan cara yang sama.
+
+- **Uji mutasi:** dengan `await afterPaint()` di `svgToPng` dilewati, tes gagal dan urutannya menjadi `['started', 'painted', 'loaded']`. Setelah dikembalikan, `png.ts` tidak berubah.
+- **Chromium (lokal):** tes lulus 5 kali berturut-turut (`--repeat-each=5`), dan seluruh `tests/export/png.e2e.ts` (43 tes) lulus.
+- **Firefox dan WebKit (CI):** run 5 dibatalkan sebelum selesai oleh push laporan ini. Hasilnya dari run berikutnya, yang menguji kode yang sama, kutambahkan setelah selesai.
 
 **Supaya job wajib benar-benar menahan merge,** FaL perlu memasang ruleset di GitHub:
 
@@ -119,13 +132,13 @@ Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run 
 
 ## Link Preview Vercel (T1)
 
-**Belum terbukti.** `curl` ke `https://falette-git-claude-charming-albattani-ms0114-fa-lt-ech.vercel.app` dan `https://falette.vercel.app` dari sesi ini ditolak proxy (403), karena kebijakan jaringan environment memblokir `*.vercel.app`. Deployment Vercel untuk kedua commit sudah berstatus Ready.
+**Belum terbukti.** Link Preview dilindungi Vercel Authentication. Permintaan tanpa login dialihkan (302) ke `vercel.com/login`, jadi `curl` biasa tidak bisa membuktikan 404 dan header, dari mana pun dijalankan. Selain itu, kebijakan jaringan environment ini memblokir `*.vercel.app` (proxy menjawab 403). FaL memeriksanya dari sisinya dan mengirim hasilnya menyusul. Pembungkus adapter belum dipasang sampai hasil itu ada.
 
 Bukti tidak langsung dari simulasi `VERCEL=1 npm run build`: `.vercel/output/config.json` yang ditulis adapter-static hanya berisi pengalihan garis miring, header cache untuk `/_app/immutable`, `handle: filesystem`, dan status 404 untuk aset `/_app/immutable` yang hilang. Tidak ada aturan yang menyajikan `404.html`. Jadi kemungkinan besar path asal-asalan masih menampilkan 404 bawaan Vercel.
 
-Langkah berikutnya, setelah FaL mengirim hasil `curl`:
+Langkah berikutnya, setelah hasil pengecekan FaL ada:
 
-- Bila 404 bawaan Vercel tampil atau header `frame-ancestors` tidak terkirim, pembungkus adapter dipasang di PR ini (keputusan 2 di rencana sesi). Bukti `curl` sebelum dan sesudahnya dicatat di sini.
+- Bila 404 bawaan Vercel tampil atau header `frame-ancestors` tidak terkirim, pembungkus adapter dipasang di PR ini (keputusan 2 di rencana sesi). Bukti sebelum dan sesudahnya dicatat di sini.
 - Bila `vercel.json` terbukti diabaikan, hal itu bertentangan dengan NFR Keamanan, yang menyebut `vercel.json`. FaL memperbarui PRD secara terpisah.
 
 ---
@@ -164,7 +177,7 @@ Home ponsel (Indonesia), terang dan gelap, 390 × 844:
 
 ## Belum diuji
 
-- Perilaku Vercel yang sebenarnya: 404 di path asal-asalan, termasuk yang bertingkat, dan header `frame-ancestors` (T1).
+- Perilaku Vercel yang sebenarnya: 404 di path asal-asalan, termasuk yang bertingkat, dan header `frame-ancestors` (T1). Menunggu pengecekan FaL.
 - Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright sudah berjalan, dengan satu kegagalan Fase 1a (bagian CI).
 - Device asli: pengalih bahasa di ponsel, tema yang ikut berubah saat setelan sistem berubah, dan tidak adanya kedip saat dimuat ulang.
 - Path tak dikenal di server lokal. `vite preview` dijalankan SvelteKit, jadi 404 hanya diuji dengan menyajikan `404.html` lewat `page.route`.
