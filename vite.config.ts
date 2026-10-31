@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
-import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { adapter } from './adapter';
 
 /** CSP hashes of the inline scripts that src/hooks.server.ts adds to the pages (THM-04, NAV-11). */
 const inlineScriptHashes = ['theme', 'lang-redirect', 'lang-404'].map(
