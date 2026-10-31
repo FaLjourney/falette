@@ -10,16 +10,24 @@ export interface VercelConfig {
 }
 
 /**
- * Serves 404.html with status 404 for every request that ends in a 404 (PRD route table). The
- * error phase comes after every other rule, as @vercel/next does for a static 404 page. A rule with
- * `dest` in the filesystem phase is not checked against the files again, so it cannot do this.
+ * Serves 404.html with status 404 for every request that ends in a 404 (PRD route table), in the
+ * error phase after every other rule, as @vercel/next does for a static 404 page.
  */
 export const NOT_FOUND_ROUTES: readonly Route[] = [
 	{ handle: 'error' },
 	{ src: '/.*', dest: '/404.html', status: 404 }
 ];
 
-/** The Build Output API config adapter-static writes, with `NOT_FOUND_ROUTES` added last. */
+/**
+ * The pair adapter-static writes for 404.html, a `trailingSlash: 'never'` page. It rewrites
+ * /404.html to /404.html/, which matches no file; without it, the 404.html override serves the file.
+ */
+const NOT_FOUND_PAGE_SOURCES = new Set(['/404.html', '/404.html/']);
+
+/**
+ * The Build Output API config adapter-static writes, without its 404.html rules and with
+ * `NOT_FOUND_ROUTES` added last. Every other rule and the overrides stay as written.
+ */
 export function withNotFoundRoutes(config: VercelConfig): VercelConfig {
 	const tail = config.routes.slice(-NOT_FOUND_ROUTES.length);
 	if (JSON.stringify(tail) === JSON.stringify(NOT_FOUND_ROUTES)) {
@@ -29,7 +37,10 @@ export function withNotFoundRoutes(config: VercelConfig): VercelConfig {
 		// Vercel allows each handle once, so a second error phase would be rejected.
 		throw new Error('The Vercel config already has a { handle: "error" } phase');
 	}
-	return { ...config, routes: [...config.routes, ...NOT_FOUND_ROUTES] };
+	const routes = config.routes.filter(
+		(route) => typeof route.src !== 'string' || !NOT_FOUND_PAGE_SOURCES.has(route.src)
+	);
+	return { ...config, routes: [...routes, ...NOT_FOUND_ROUTES] };
 }
 
 const VERCEL_CONFIG = '.vercel/output/config.json';
