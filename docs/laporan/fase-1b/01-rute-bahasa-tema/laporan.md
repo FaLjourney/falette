@@ -4,7 +4,7 @@ Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) 
 
 **Status:** kode dan tes selesai, dan ketiga job CI hijau, termasuk Firefox dan WebKit, setelah tes EXP-07 dari Fase 1a diperbaiki dengan izin FaL ([bagian CI](#ci)).
 
-Untuk T1, FaL mengecek link Preview. Header `frame-ancestors` sudah terkirim dari `vercel.json`, tetapi path asal-asalan masih menampilkan 404 bawaan Vercel. Karena itu `adapter.ts` sekarang menambah satu aturan 404 ke config Vercel. Yang tersisa: FaL mengecek ulang 404 setelah deploy ([bagian T1](#link-preview-vercel-t1)).
+Untuk T1, FaL mengecek link Preview. Header `frame-ancestors` terkirim dari `vercel.json`, tetapi path asal-asalan masih menampilkan 404 bawaan Vercel. Aturan 404 pertama di `adapter.ts`, di fase filesystem, gagal di cek ulang FaL. Aturan itu sekarang diganti dengan fase error. Yang tersisa: FaL mengecek ulang 404 setelah deploy ([bagian T1](#link-preview-vercel-t1)).
 
 ---
 
@@ -21,8 +21,9 @@ Untuk T1, FaL mengecek link Preview. Header `frame-ancestors` sudah terkirim dar
 | `9055632` | `AGENTS.md` | Baris peta folder untuk tempat baru | Jawaban 3, T5 |
 | `56f7167` | `*.png` | Tangkapan layar | |
 | `ec7dfdd` | `tests/export/png.e2e.ts` | Tes "lets the page paint before the heavy work starts" membandingkan urutan kejadian, bukan stempel waktu (izin FaL) | EXP-07 |
-| `d0cc497` | `adapter.ts`, `vite.config.ts`, `tests/adapter.test.ts` | Pembungkus adapter-static: satu aturan 404 di `.vercel/output/config.json`, dengan 4 tes unit (keputusan 2) | Tabel rute, T1 |
+| `d0cc497` | `adapter.ts`, `vite.config.ts`, `tests/adapter.test.ts` | Pembungkus adapter-static: aturan 404 di fase filesystem `.vercel/output/config.json`, dengan 4 tes unit (keputusan 2). Gagal di Preview. | Tabel rute, T1 |
 | `df7e641` | `AGENTS.md` | Baris peta folder untuk `adapter.ts` | Jawaban 3 |
+| `516fef7` | `adapter.ts`, `tests/adapter.test.ts` | Aturan 404 dipindah ke fase error, dan tes unit disesuaikan | Tabel rute, T1 |
 | Commit laporan | `laporan.md` | Laporan ini | |
 
 Yang tidak disentuh: engine, pola, kode ekspor, link berbagi, preset, snapshot ENG-08, PRD, dan katalog. Versi engine tetap 1.
@@ -83,7 +84,7 @@ Tes baru:
 | `tests/site.e2e.ts` | 36 | Pengalih, query dan hash (P3), `lang` dan `hreflang` (P4), urutan skrip (P2), tanpa atribut `style` (T2), tema tanpa kedip, navigasi antarbahasa, dan 404 di path bertingkat (P1) |
 | `tests/budget.e2e.ts` | 2 | JS awal Home dan Create |
 | `tests/a11y.e2e.ts` | 14 | axe WCAG 2.2 AA di semua halaman, terang dan gelap |
-| `tests/adapter.test.ts` | 4 | Aturan 404 di config Vercel ([bagian T1](#perbaikan-pembungkus-adapter-keputusan-2-commit-d0cc497)) |
+| `tests/adapter.test.ts` | 4 | Aturan 404 di fase error config Vercel ([bagian T1](#percobaan-2-fase-error-commit-516fef7)) |
 
 Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/helpers/site.ts`).
 
@@ -156,27 +157,51 @@ X-Robots-Tag: noindex
 
 **404: gagal.** `/id/tidak-ada/` di link Preview menampilkan 404 bawaan Vercel ("This page doesn't exist", "404 NOT_FOUND"). Ini sesuai dugaan dari simulasi sebelumnya: `.vercel/output/config.json` yang ditulis adapter-static tidak punya aturan yang menyajikan `404.html`.
 
-### Perbaikan: pembungkus adapter (keputusan 2, commit `d0cc497`)
+### Percobaan 1: aturan di fase filesystem (commit `d0cc497`), gagal
 
-`adapter.ts` membungkus adapter-static. Setelah adapter-static menulis config di Vercel, pembungkus itu menambah satu aturan di urutan terakhir, hanya untuk 404:
+`adapter.ts` membungkus adapter-static (keputusan 2). Setelah adapter-static menulis config di Vercel, pembungkus menambah aturan ini di urutan terakhir, setelah `{ "handle": "filesystem" }`:
 
 ```json
 { "src": "/.*", "dest": "/404.html", "status": 404 }
 ```
 
-- Menurut dokumentasi Build Output API, aturan sesudah `{ "handle": "filesystem" }` baru diperiksa setelah pencarian file gagal. Jadi aturan ini hanya berlaku untuk path yang tidak cocok dengan file mana pun: isi `404.html` disajikan dengan status 404.
-- Aturan lain dari adapter-static tetap utuh. Itu termasuk status 404 polos untuk aset `/_app/immutable` yang hilang, yang berhenti lebih dulu karena `continue: false`.
-- Pembungkus hanya berjalan bila `VERCEL` ada, sama dengan deteksi adapter-static. Build biasa tidak berubah.
-- Bila config tidak memuat `handle: filesystem`, build dihentikan dengan error, karena aturan catch-all di luar fase itu akan menjawab semua permintaan dengan halaman 404.
+Simulasi `VERCEL=1 npm run build` memperlihatkan aturan itu di `config.json`. Tetapi cek ulang FaL di Preview (deployment dengan `d0cc497`) masih mendapat 404 bawaan Vercel. Ini keluaran `curl.exe -sI` ke `/id/tidak-ada/`:
+
+```
+HTTP/1.1 404 Not Found
+Content-Length: 79
+Content-Security-Policy: frame-ancestors 'none'
+Content-Type: text/plain; charset=utf-8
+X-Vercel-Error: NOT_FOUND
+```
+
+`text/plain` dan `X-Vercel-Error: NOT_FOUND` menandakan 404 bawaan Vercel, bukan isi `404.html`. Header `frame-ancestors` tetap terkirim, juga pada respons 404 ini. `/en/` tetap 200 dengan header yang sama.
+
+**Penyebab yang paling mungkin** (diagnosis FaL, kucek di kode Vercel): aturan ber-`dest` di fase filesystem tidak dicek ulang ke filesystem tanpa `check: true`. Di `@vercel/routing-utils` 6.6.1, setiap rewrite dari `vercel.json` diberi `check: true` (`dist/superstatic.js:158`), dan validatornya mewajibkan `check: true` untuk aturan ber-`dest` setelah `handle: miss` (`dist/index.js:166`).
+
+### Percobaan 2: fase error (commit `516fef7`)
+
+Aturan itu diganti dengan dua aturan di urutan paling akhir, setelah semua aturan adapter-static:
+
+```json
+{ "handle": "error" },
+{ "src": "/.*", "dest": "/404.html", "status": 404 }
+```
+
+- Ini pola builder resmi Vercel untuk Build Output API. Bila ada halaman 404 statis, `@vercel/next` 28.0.1 menutup daftar aturannya dengan `{ handle: "error" }`, lalu `{ status: 404, src: <entry>/.*, dest: /<entry>/404 }` (`dist/index.js:18551`). Ini kucek lewat `npm pack`, tanpa memasang paketnya.
+- Fase error dicek setelah sebuah permintaan berakhir dengan error seperti 404, jadi `/id/tidak-ada/` mendapat isi `404.html` dengan status 404.
+- Aturan lain dari adapter-static tetap utuh. Ada satu akibat sampingan pada aset `/_app/immutable` yang hilang. Statusnya tetap 404 dengan `cache-control: no-store`, tetapi isinya kemungkinan ikut menjadi `404.html`, karena aturan adapter-static untuk aset itu juga berakhir dengan 404. Browser tetap gagal memuat aset itu, seperti sebelumnya.
+- Vercel hanya mengizinkan satu `handle` dari tiap jenis (validator di `@vercel/routing-utils`). Karena itu, bila config sudah punya fase error, build dihentikan dengan error.
+- Pembungkus hanya berjalan bila `VERCEL` ada, sama dengan deteksi adapter-static. Build biasa tidak berubah, dan header `frame-ancestors` tetap di `vercel.json`.
 
 **Tes unit** (`tests/adapter.test.ts`, 4 tes):
 
-- Aturan ditambahkan paling akhir, dan aturan serta kunci lain tetap sama.
-- Aturan berada setelah `handle: filesystem` dan setelah 404 aset immutable.
+- Kedua aturan ditambahkan paling akhir, dan aturan serta kunci lain tetap sama.
+- Fase error berada setelah fase filesystem dan semua aturan adapter-static.
 - Aturan tidak ditambahkan dua kali.
-- Config tanpa fase filesystem ditolak.
+- Config yang sudah punya fase error lain ditolak.
 
-**Bukti `VERCEL=1 npm run build`:** `config.json` berisi 16 aturan. Itu 15 aturan dari adapter-static yang tidak berubah, ditambah aturan baru di posisi terakhir, setelah `handle: filesystem` (indeks 13). Dua aturan terakhirnya:
+**Bukti `VERCEL=1 npm run build`:** `config.json` berisi 17 aturan. Itu 15 aturan adapter-static yang tidak berubah, lalu `handle: error` (indeks 15) dan aturan 404. `handle: filesystem` ada di indeks 13. Tiga aturan terakhirnya:
 
 ```json
 [
@@ -186,6 +211,7 @@ X-Robots-Tag: noindex
     "headers": { "cache-control": "no-store" },
     "continue": false
   },
+  { "handle": "error" },
   { "src": "/.*", "dest": "/404.html", "status": 404 }
 ]
 ```
@@ -194,12 +220,14 @@ Build tanpa `VERCEL` hanya menulis `build/`, tanpa `.vercel/output`.
 
 ### Langkah cek ulang untuk FaL setelah deploy
 
-Pakai deployment Preview dari commit terakhir PR ini, yang memuat `d0cc497`, dengan cara masuk yang sama seperti saat mengecek `/en/`.
+Pakai deployment Preview dari commit terakhir PR ini, yang memuat `516fef7`, dengan cara masuk yang sama seperti saat mengecek `/en/`.
 
 1. Buka `/id/tidak-ada/` di browser. Yang harus tampil adalah 404 Falette, bukan 404 bawaan Vercel: "Page not found" dengan tautan Home dan Create ke `/en/…`. Bahasa Inggris tampil karena belum ada bahasa tersimpan.
 2. Opsional, untuk melihat versi Indonesia: jalankan `localStorage.setItem('falette:lang', 'id')` di konsol DevTools, lalu muat ulang. Harus tampil "Halaman tidak ditemukan" dengan tautan ke `/id/…`.
-3. Jalankan `curl.exe -sI <link Preview>/id/tidak-ada/`. Hasilnya harus berisi `HTTP/1.1 404 Not Found` dan `Content-Security-Policy: frame-ancestors 'none'`.
+3. Jalankan `curl.exe -sI <link Preview>/id/tidak-ada/`. Hasilnya harus berisi `HTTP/1.1 404 Not Found`, `Content-Type: text/html`, dan `Content-Security-Policy: frame-ancestors 'none'`, tanpa `X-Vercel-Error`.
 4. Jalankan `curl.exe -sI <link Preview>/en/`. Hasilnya harus tetap `HTTP/1.1 200 OK` dengan header yang sama.
+
+Bila 404 masih gagal setelah deploy ini, aku melaporkannya dulu sebelum mencoba pola lain.
 
 ---
 
@@ -238,7 +266,7 @@ Home ponsel (Indonesia), terang dan gelap, 390 × 844:
 
 ## Belum diuji
 
-- 404 Falette di Vercel setelah pembungkus adapter dipasang: tampilan dan status 404 di path asal-asalan, termasuk yang bertingkat, beserta header `frame-ancestors` pada respons 404. Ini menunggu cek ulang FaL ([langkah cek ulang](#langkah-cek-ulang-untuk-fal-setelah-deploy)). Aturannya baru terbukti lewat simulasi `VERCEL=1 npm run build` dan tes unit.
+- 404 Falette di Vercel dengan aturan fase error (`516fef7`): tampilan dan status 404 di path asal-asalan, termasuk yang bertingkat. Ini menunggu cek ulang FaL ([langkah cek ulang](#langkah-cek-ulang-untuk-fal-setelah-deploy)). Aturannya baru terbukti lewat simulasi `VERCEL=1 npm run build` dan tes unit, dan percobaan pertama yang juga lulus di sana ternyata gagal di Vercel. Header `frame-ancestors` pada respons 404 sudah terbukti di cek ulang pertama.
 - Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright lulus (run 6).
 - Device asli: pengalih bahasa di ponsel, tema yang ikut berubah saat setelan sistem berubah, dan tidak adanya kedip saat dimuat ulang.
 - Path tak dikenal di server lokal. `vite preview` dijalankan SvelteKit, jadi 404 hanya diuji dengan menyajikan `404.html` lewat `page.route`.
