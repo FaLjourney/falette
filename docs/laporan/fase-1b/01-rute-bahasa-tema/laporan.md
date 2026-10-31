@@ -2,7 +2,9 @@
 
 Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) yang disetujui FaL dengan perubahan P1–P6. Branch `claude/charming-albattani-ms0114`, dari main `b3b2744`, di PR #14.
 
-**Status:** kode dan tes selesai, dan CI wajib hijau. Tes EXP-07 dari Fase 1a yang gagal di Firefox dan WebKit sudah diperbaiki dengan izin FaL ([bagian CI](#ci)). Satu hal belum terbukti: perilaku 404 dan header `frame-ancestors` di link Preview Vercel (T1). Link Preview dilindungi Vercel Authentication, jadi FaL memeriksanya dari sisinya dan mengirim hasilnya menyusul ([bagian T1](#link-preview-vercel-t1)).
+**Status:** kode dan tes selesai, dan ketiga job CI hijau, termasuk Firefox dan WebKit, setelah tes EXP-07 dari Fase 1a diperbaiki dengan izin FaL ([bagian CI](#ci)).
+
+Untuk T1, FaL mengecek link Preview. Header `frame-ancestors` sudah terkirim dari `vercel.json`, tetapi path asal-asalan masih menampilkan 404 bawaan Vercel. Karena itu `adapter.ts` sekarang menambah satu aturan 404 ke config Vercel. Yang tersisa: FaL mengecek ulang 404 setelah deploy ([bagian T1](#link-preview-vercel-t1)).
 
 ---
 
@@ -19,6 +21,8 @@ Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) 
 | `9055632` | `AGENTS.md` | Baris peta folder untuk tempat baru | Jawaban 3, T5 |
 | `56f7167` | `*.png` | Tangkapan layar | |
 | `ec7dfdd` | `tests/export/png.e2e.ts` | Tes "lets the page paint before the heavy work starts" membandingkan urutan kejadian, bukan stempel waktu (izin FaL) | EXP-07 |
+| `d0cc497` | `adapter.ts`, `vite.config.ts`, `tests/adapter.test.ts` | Pembungkus adapter-static: satu aturan 404 di `.vercel/output/config.json`, dengan 4 tes unit (keputusan 2) | Tabel rute, T1 |
+| `df7e641` | `AGENTS.md` | Baris peta folder untuk `adapter.ts` | Jawaban 3 |
 | Commit laporan | `laporan.md` | Laporan ini | |
 
 Yang tidak disentuh: engine, pola, kode ekspor, link berbagi, preset, snapshot ENG-08, PRD, dan katalog. Versi engine tetap 1.
@@ -66,7 +70,7 @@ Yang tidak disentuh: engine, pola, kode ekspor, link berbagi, preset, snapshot E
 | --- | --- |
 | `npm run check` | 0 error, 0 peringatan (425 file) |
 | `npm run lint` | Bersih |
-| `npm test` | 656 tes unit (37 baru) dan 101 tes Playwright di Chromium (52 baru) lulus. Snapshot ENG-08 tidak berubah. |
+| `npm test` | 660 tes unit (41 baru) dan 101 tes Playwright di Chromium (52 baru) lulus. Snapshot ENG-08 tidak berubah. |
 | `npm run build` | Berhasil, 7 halaman |
 
 Tes baru:
@@ -79,6 +83,7 @@ Tes baru:
 | `tests/site.e2e.ts` | 36 | Pengalih, query dan hash (P3), `lang` dan `hreflang` (P4), urutan skrip (P2), tanpa atribut `style` (T2), tema tanpa kedip, navigasi antarbahasa, dan 404 di path bertingkat (P1) |
 | `tests/budget.e2e.ts` | 2 | JS awal Home dan Create |
 | `tests/a11y.e2e.ts` | 14 | axe WCAG 2.2 AA di semua halaman, terang dan gelap |
+| `tests/adapter.test.ts` | 4 | Aturan 404 di config Vercel ([bagian T1](#perbaikan-pembungkus-adapter-keputusan-2-commit-d0cc497)) |
 
 Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/helpers/site.ts`).
 
@@ -102,9 +107,10 @@ Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/
 | 2 | `56f7167` | Lulus | Lulus | Gagal: 201 dari 202 tes lulus (Firefox) |
 | 3 | `185b234` | Lulus | Tes lulus, job dibatalkan oleh run 4 | Dibatalkan, digantikan run 4 |
 | 4 | `a7e30e0` | Lulus | Lulus | Gagal: 200 dari 202 tes lulus (Firefox dan WebKit) |
-| 5 | `ec7dfdd` | Lulus | Lulus | Dibatalkan oleh push laporan ini |
+| 5 | `ec7dfdd` | Lulus | Lulus | Dibatalkan, digantikan run 6 |
+| 6 | `6316124` | Lulus | Lulus | **Lulus: 202 dari 202 tes (7,0 menit)** |
 
-Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run baru. Job WebKit paling lama di `tests/export/timing.e2e.ts` (sekitar 6 menit).
+Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run baru. Job WebKit paling lama di `tests/export/timing.e2e.ts` (5–6 menit).
 
 **Kegagalan Firefox dan WebKit (run 2 dan 4).** Semua 52 tes baru Sesi 1 lulus di kedua browser. Yang gagal hanya tes Fase 1a, `tests/export/png.e2e.ts:156` ("EXP-07: lets the page paint before the heavy work starts"). Tes itu mengharapkan stempel waktu `painted` lebih kecil dari `started`, tetapi keduanya bernilai sama: 155 dan 155 di Firefox, 82 dan 82 di WebKit. Penyebabnya, kedua browser membulatkan `performance.now()` ke sekitar 1 ms, sehingga dua kejadian dalam milidetik yang sama tampak bersamaan.
 
@@ -118,7 +124,7 @@ Maksud tesnya tetap: indikator sempat digambar sebelum kerja berat dimulai. Perb
 
 - **Uji mutasi:** dengan `await afterPaint()` di `svgToPng` dilewati, tes gagal dan urutannya menjadi `['started', 'painted', 'loaded']`. Setelah dikembalikan, `png.ts` tidak berubah.
 - **Chromium (lokal):** tes lulus 5 kali berturut-turut (`--repeat-each=5`), dan seluruh `tests/export/png.e2e.ts` (43 tes) lulus.
-- **Firefox dan WebKit (CI):** run 5 dibatalkan sebelum selesai oleh push laporan ini. Hasilnya dari run berikutnya, yang menguji kode yang sama, kutambahkan setelah selesai.
+- **Firefox dan WebKit (CI):** run 6 menjalankan kode tes yang sama dengan run 5 yang dibatalkan, dan semua 202 tes lulus. Job `e2e-firefox-webkit` hijau untuk pertama kalinya.
 
 **Supaya job wajib benar-benar menahan merge,** FaL perlu memasang ruleset di GitHub:
 
@@ -132,14 +138,68 @@ Maksud tesnya tetap: indikator sempat digambar sebelum kerja berat dimulai. Perb
 
 ## Link Preview Vercel (T1)
 
-**Belum terbukti.** Link Preview dilindungi Vercel Authentication. Permintaan tanpa login dialihkan (302) ke `vercel.com/login`, jadi `curl` biasa tidak bisa membuktikan 404 dan header, dari mana pun dijalankan. Selain itu, kebijakan jaringan environment ini memblokir `*.vercel.app` (proxy menjawab 403). FaL memeriksanya dari sisinya dan mengirim hasilnya menyusul. Pembungkus adapter belum dipasang sampai hasil itu ada.
+Link Preview dilindungi Vercel Authentication: permintaan tanpa login dialihkan (302) ke `vercel.com/login`. Kebijakan jaringan environment ini juga memblokir `*.vercel.app` (proxy menjawab 403). Karena itu FaL yang mengecek dari sisinya.
 
-Bukti tidak langsung dari simulasi `VERCEL=1 npm run build`: `.vercel/output/config.json` yang ditulis adapter-static hanya berisi pengalihan garis miring, header cache untuk `/_app/immutable`, `handle: filesystem`, dan status 404 untuk aset `/_app/immutable` yang hilang. Tidak ada aturan yang menyajikan `404.html`. Jadi kemungkinan besar path asal-asalan masih menampilkan 404 bawaan Vercel.
+### Hasil cek FaL (sebelum pembungkus)
 
-Langkah berikutnya, setelah hasil pengecekan FaL ada:
+**Header: lulus.** `curl.exe -sI` ke `/en/` di link Preview. Ini baris yang relevan, sesuai laporan FaL:
 
-- Bila 404 bawaan Vercel tampil atau header `frame-ancestors` tidak terkirim, pembungkus adapter dipasang di PR ini (keputusan 2 di rencana sesi). Bukti sebelum dan sesudahnya dicatat di sini.
-- Bila `vercel.json` terbukti diabaikan, hal itu bertentangan dengan NFR Keamanan, yang menyebut `vercel.json`. FaL memperbarui PRD secara terpisah.
+```
+HTTP/1.1 200 OK
+Content-Security-Policy: frame-ancestors 'none'
+X-Robots-Tag: noindex
+```
+
+- `vercel.json` dipakai Vercel, jadi header tetap di sana dan tidak bertentangan dengan NFR Keamanan.
+- Header itu tidak ditambahkan ke pembungkus adapter.
+- `X-Robots-Tag: noindex` dikirim Vercel untuk Preview, bukan oleh situs.
+
+**404: gagal.** `/id/tidak-ada/` di link Preview menampilkan 404 bawaan Vercel ("This page doesn't exist", "404 NOT_FOUND"). Ini sesuai dugaan dari simulasi sebelumnya: `.vercel/output/config.json` yang ditulis adapter-static tidak punya aturan yang menyajikan `404.html`.
+
+### Perbaikan: pembungkus adapter (keputusan 2, commit `d0cc497`)
+
+`adapter.ts` membungkus adapter-static. Setelah adapter-static menulis config di Vercel, pembungkus itu menambah satu aturan di urutan terakhir, hanya untuk 404:
+
+```json
+{ "src": "/.*", "dest": "/404.html", "status": 404 }
+```
+
+- Menurut dokumentasi Build Output API, aturan sesudah `{ "handle": "filesystem" }` baru diperiksa setelah pencarian file gagal. Jadi aturan ini hanya berlaku untuk path yang tidak cocok dengan file mana pun: isi `404.html` disajikan dengan status 404.
+- Aturan lain dari adapter-static tetap utuh. Itu termasuk status 404 polos untuk aset `/_app/immutable` yang hilang, yang berhenti lebih dulu karena `continue: false`.
+- Pembungkus hanya berjalan bila `VERCEL` ada, sama dengan deteksi adapter-static. Build biasa tidak berubah.
+- Bila config tidak memuat `handle: filesystem`, build dihentikan dengan error, karena aturan catch-all di luar fase itu akan menjawab semua permintaan dengan halaman 404.
+
+**Tes unit** (`tests/adapter.test.ts`, 4 tes):
+
+- Aturan ditambahkan paling akhir, dan aturan serta kunci lain tetap sama.
+- Aturan berada setelah `handle: filesystem` dan setelah 404 aset immutable.
+- Aturan tidak ditambahkan dua kali.
+- Config tanpa fase filesystem ditolak.
+
+**Bukti `VERCEL=1 npm run build`:** `config.json` berisi 16 aturan. Itu 15 aturan dari adapter-static yang tidak berubah, ditambah aturan baru di posisi terakhir, setelah `handle: filesystem` (indeks 13). Dua aturan terakhirnya:
+
+```json
+[
+  {
+    "src": "/_app/immutable/.+",
+    "status": 404,
+    "headers": { "cache-control": "no-store" },
+    "continue": false
+  },
+  { "src": "/.*", "dest": "/404.html", "status": 404 }
+]
+```
+
+Build tanpa `VERCEL` hanya menulis `build/`, tanpa `.vercel/output`.
+
+### Langkah cek ulang untuk FaL setelah deploy
+
+Pakai deployment Preview dari commit terakhir PR ini, yang memuat `d0cc497`, dengan cara masuk yang sama seperti saat mengecek `/en/`.
+
+1. Buka `/id/tidak-ada/` di browser. Yang harus tampil adalah 404 Falette, bukan 404 bawaan Vercel: "Page not found" dengan tautan Home dan Create ke `/en/…`. Bahasa Inggris tampil karena belum ada bahasa tersimpan.
+2. Opsional, untuk melihat versi Indonesia: jalankan `localStorage.setItem('falette:lang', 'id')` di konsol DevTools, lalu muat ulang. Harus tampil "Halaman tidak ditemukan" dengan tautan ke `/id/…`.
+3. Jalankan `curl.exe -sI <link Preview>/id/tidak-ada/`. Hasilnya harus berisi `HTTP/1.1 404 Not Found` dan `Content-Security-Policy: frame-ancestors 'none'`.
+4. Jalankan `curl.exe -sI <link Preview>/en/`. Hasilnya harus tetap `HTTP/1.1 200 OK` dengan header yang sama.
 
 ---
 
@@ -172,13 +232,14 @@ Home ponsel (Indonesia), terang dan gelap, 390 × 844:
 7. **`hooks.server.ts` punya jalur cadangan:** halaman tanpa meta CSP mendapat skrip di awal `<head>`. Semua halaman prerender punya meta CSP, dan tes urutan skrip memastikannya.
 8. **`t()` sudah mendukung `{placeholder}`** sesuai rencana, walaupun teks Sesi 1 belum memakainya. Teks ekspor di Sesi 10 akan memakainya, dan perilakunya sudah diuji.
 9. **`<html lang>` mengikuti navigasi di browser** lewat `$effect` di layout bahasa. Di Sesi 1 belum ada tautan antarbahasa, jadi tes menyisipkan tautan sementara ke halaman. Dropdown di Sesi 2 akan memakai jalur yang sama.
+10. **`adapter.ts` berada di root,** di samping `vite.config.ts` yang mengimpornya, dan sudah dicatat di peta folder AGENTS.md. Pembungkus itu mengulang cara adapter-static mendeteksi Vercel (`process.env.VERCEL`), karena hanya dalam kondisi itu adapter-static menulis `config.json`.
 
 ---
 
 ## Belum diuji
 
-- Perilaku Vercel yang sebenarnya: 404 di path asal-asalan, termasuk yang bertingkat, dan header `frame-ancestors` (T1). Menunggu pengecekan FaL.
-- Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright sudah berjalan, dengan satu kegagalan Fase 1a (bagian CI).
+- 404 Falette di Vercel setelah pembungkus adapter dipasang: tampilan dan status 404 di path asal-asalan, termasuk yang bertingkat, beserta header `frame-ancestors` pada respons 404. Ini menunggu cek ulang FaL ([langkah cek ulang](#langkah-cek-ulang-untuk-fal-setelah-deploy)). Aturannya baru terbukti lewat simulasi `VERCEL=1 npm run build` dan tes unit.
+- Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright lulus (run 6).
 - Device asli: pengalih bahasa di ponsel, tema yang ikut berubah saat setelan sistem berubah, dan tidak adanya kedip saat dimuat ulang.
 - Path tak dikenal di server lokal. `vite preview` dijalankan SvelteKit, jadi 404 hanya diuji dengan menyajikan `404.html` lewat `page.route`.
 - Lighthouse, yang menunggu Sesi 13.
