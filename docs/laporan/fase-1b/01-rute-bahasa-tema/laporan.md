@@ -4,7 +4,7 @@ Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) 
 
 **Status:** kode dan tes selesai, dan ketiga job CI hijau, termasuk Firefox dan WebKit, setelah tes EXP-07 dari Fase 1a diperbaiki dengan izin FaL ([bagian CI](#ci)).
 
-Untuk T1, FaL mengecek link Preview. Header `frame-ancestors` terkirim dari `vercel.json`, tetapi path asal-asalan masih menampilkan 404 bawaan Vercel. Aturan 404 pertama di `adapter.ts`, di fase filesystem, gagal di cek ulang FaL. Aturan itu sekarang diganti dengan fase error. Yang tersisa: FaL mengecek ulang 404 setelah deploy ([bagian T1](#link-preview-vercel-t1)).
+**T1 selesai.** Di link Preview, header `frame-ancestors` terkirim dari `vercel.json`, dan path asal-asalan menampilkan 404 Falette dengan status 404. Aturan 404 pertama di `adapter.ts`, di fase filesystem, gagal di cek ulang FaL. Aturan di fase error yang menggantikannya lulus ([bagian T1](#link-preview-vercel-t1)).
 
 ---
 
@@ -227,7 +227,9 @@ Pakai deployment Preview dari commit terakhir PR ini, yang memuat `516fef7`, den
 3. Jalankan `curl.exe -sI <link Preview>/id/tidak-ada/`. Hasilnya harus berisi `HTTP/1.1 404 Not Found`, `Content-Type: text/html`, dan `Content-Security-Policy: frame-ancestors 'none'`, tanpa `X-Vercel-Error`.
 4. Jalankan `curl.exe -sI <link Preview>/en/`. Hasilnya harus tetap `HTTP/1.1 200 OK` dengan header yang sama.
 
-Bila 404 masih gagal setelah deploy ini, aku melaporkannya dulu sebelum mencoba pola lain.
+### Hasil cek ulang FaL (dengan `516fef7`): lulus
+
+FaL mengecek ulang di deployment Preview yang memuat `516fef7`: `/id/tidak-ada/` menampilkan 404 Falette dengan status 404. Jadi aturan di fase error bekerja di Vercel, dan pola lain tidak perlu dicoba.
 
 ---
 
@@ -266,7 +268,7 @@ Home ponsel (Indonesia), terang dan gelap, 390 × 844:
 
 ## Belum diuji
 
-- 404 Falette di Vercel dengan aturan fase error (`516fef7`): tampilan dan status 404 di path asal-asalan, termasuk yang bertingkat. Ini menunggu cek ulang FaL ([langkah cek ulang](#langkah-cek-ulang-untuk-fal-setelah-deploy)). Aturannya baru terbukti lewat simulasi `VERCEL=1 npm run build` dan tes unit, dan percobaan pertama yang juga lulus di sana ternyata gagal di Vercel. Header `frame-ancestors` pada respons 404 sudah terbukti di cek ulang pertama.
+- Header `frame-ancestors` pada respons 404 Falette yang baru. Laporan cek ulang kedua hanya menyebut tampilan dan status 404. Header itu sudah terbukti pada respons 404 sebelumnya dan pada `/en/`, dan aturan header di `vercel.json` berlaku untuk semua path.
 - Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright lulus (run 6).
 - Device asli: pengalih bahasa di ponsel, tema yang ikut berubah saat setelan sistem berubah, dan tidak adanya kedip saat dimuat ulang.
 - Path tak dikenal di server lokal. `vite preview` dijalankan SvelteKit, jadi 404 hanya diuji dengan menyajikan `404.html` lewat `page.route`.
