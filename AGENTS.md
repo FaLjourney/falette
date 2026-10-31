@@ -102,6 +102,7 @@ src/
 tests/            tes unit, snapshot, dan browser
   harness/        halaman uji ekspor di browser untuk Playwright dan ponsel (tidak ikut ke situs)
   helpers/        pembantu Playwright, mis. pemeriksa pelanggaran CSP
+adapter.ts        adapter-static, ditambah aturan 404.html dengan status 404 di config Vercel
 vercel.json       header untuk Vercel (frame-ancestors)
 docs/
   PRD.md
