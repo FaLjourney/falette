@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NOT_FOUND_ROUTE, withNotFoundRoute, type VercelConfig } from '../adapter';
+import { NOT_FOUND_ROUTES, withNotFoundRoutes, type VercelConfig } from '../adapter';
 
 // The shape adapter-static writes to .vercel/output/config.json: page redirects, the immutable
 // cache header, the filesystem phase, and a plain 404 for missing immutable assets.
@@ -23,28 +23,36 @@ const fromAdapterStatic: VercelConfig = {
 	overrides: { '404.html': { path: '404.html' }, 'en/index.html': { path: 'en' } }
 };
 
-describe('withNotFoundRoute (PRD route table)', () => {
-	it('adds the 404.html rule last and keeps every other rule and key as it was', () => {
-		const config = withNotFoundRoute(structuredClone(fromAdapterStatic));
-		expect(config.routes).toEqual([...fromAdapterStatic.routes, NOT_FOUND_ROUTE]);
+describe('withNotFoundRoutes (PRD route table)', () => {
+	it('adds the error phase with the 404.html rule last, keeping every other rule and key', () => {
+		const config = withNotFoundRoutes(structuredClone(fromAdapterStatic));
+		expect(config.routes).toEqual([...fromAdapterStatic.routes, ...NOT_FOUND_ROUTES]);
 		expect({ ...config, routes: [] }).toEqual({ ...fromAdapterStatic, routes: [] });
-		expect(NOT_FOUND_ROUTE).toEqual({ src: '/.*', dest: '/404.html', status: 404 });
+		expect(NOT_FOUND_ROUTES).toEqual([
+			{ handle: 'error' },
+			{ src: '/.*', dest: '/404.html', status: 404 }
+		]);
 	});
 
-	it('puts the rule in the filesystem phase, after the immutable asset 404', () => {
-		const routes = withNotFoundRoute(structuredClone(fromAdapterStatic)).routes;
+	it('puts the error phase after the filesystem phase and every adapter-static rule', () => {
+		const routes = withNotFoundRoutes(structuredClone(fromAdapterStatic)).routes;
 		const filesystem = routes.findIndex((route) => route.handle === 'filesystem');
-		expect(routes.indexOf(NOT_FOUND_ROUTE)).toBeGreaterThan(filesystem);
-		expect(routes.at(-2)).toMatchObject({ src: '/_app/immutable/.+', continue: false });
+		const error = routes.findIndex((route) => route.handle === 'error');
+		expect(error).toBeGreaterThan(filesystem);
+		expect(error).toBe(fromAdapterStatic.routes.length);
+		expect(routes.at(-1)).toEqual({ src: '/.*', dest: '/404.html', status: 404 });
 	});
 
-	it('does not add the rule twice', () => {
-		const once = withNotFoundRoute(structuredClone(fromAdapterStatic));
-		expect(withNotFoundRoute(once).routes).toHaveLength(fromAdapterStatic.routes.length + 1);
+	it('does not add the rules twice', () => {
+		const once = withNotFoundRoutes(structuredClone(fromAdapterStatic));
+		expect(withNotFoundRoutes(once).routes).toHaveLength(
+			fromAdapterStatic.routes.length + NOT_FOUND_ROUTES.length
+		);
 	});
 
-	it('refuses a config without the filesystem phase', () => {
-		const config = { version: 3, routes: [{ src: '/en/', dest: '/en' }] };
-		expect(() => withNotFoundRoute(config)).toThrow('filesystem');
+	it('refuses a config that already has another error phase', () => {
+		const config = structuredClone(fromAdapterStatic);
+		config.routes.push({ handle: 'error' }, { src: '/.*', dest: '/other.html', status: 404 });
+		expect(() => withNotFoundRoutes(config)).toThrow('error');
 	});
 });
