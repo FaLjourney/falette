@@ -155,28 +155,31 @@ test.describe('EXP-07: export without freezing the page', () => {
 
 	test('lets the page paint before the heavy work starts', async ({ page }) => {
 		await openHarness(page);
-		const { painted, started, loaded } = await page.evaluate(
+		// The order of events, not their timestamps: Firefox and WebKit round performance.now() to
+		// about 1 ms, so two events in the same millisecond would look simultaneous.
+		const order = await page.evaluate(
 			async ({ c, mark }) => {
-				performance.clearMarks();
+				const events: string[] = [];
 				// The export starts by turning the SVG into a blob URL; note when it first does.
-				let started = Infinity;
 				const createObjectURL = URL.createObjectURL;
 				URL.createObjectURL = (blob) => {
-					started = Math.min(started, performance.now());
+					if (!events.includes('started')) events.push('started');
 					return createObjectURL(blob);
 				};
-				let painted = Infinity;
-				requestAnimationFrame(() => {
-					painted = performance.now();
-				});
+				const performanceMark = performance.mark.bind(performance);
+				performance.mark = (name, options) => {
+					if (name === mark) events.push('loaded');
+					return performanceMark(name, options);
+				};
+				requestAnimationFrame(() => events.push('painted'));
 				await window.harness.exportPng(c);
 				URL.createObjectURL = createObjectURL;
-				return { painted, started, loaded: performance.getEntriesByName(mark)[0].startTime };
+				performance.mark = performanceMark;
+				return events;
 			},
 			{ c: desk5k, mark: PNG_MARKS.loaded }
 		);
-		expect(painted).toBeLessThan(started);
-		expect(started).toBeLessThan(loaded);
+		expect(order).toEqual(['painted', 'started', 'loaded']);
 	});
 
 	test('falls back to the main thread without Worker', async ({ page }) => {
