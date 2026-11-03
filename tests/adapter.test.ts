@@ -41,10 +41,14 @@ describe('withNotFoundRoutes (PRD route table)', () => {
 		]);
 	});
 
-	it('keeps the 404.html override, so the file is served from the filesystem', () => {
+	it('drops the 404.html rules and override, keeping the other overrides and keys', () => {
 		const config = withNotFoundRoutes(structuredClone(fromAdapterStatic));
-		expect({ ...config, routes: [] }).toEqual({ ...fromAdapterStatic, routes: [] });
-		expect(config.overrides).toMatchObject({ '404.html': { path: '404.html' } });
+		expect(config.overrides).toEqual({ 'en/index.html': { path: 'en' } });
+		expect({ ...config, routes: [], overrides: {} }).toEqual({
+			...fromAdapterStatic,
+			routes: [],
+			overrides: {}
+		});
 		const sources = config.routes.map((route) => route.src);
 		expect(sources).not.toContain('/404.html');
 		expect(sources).not.toContain('/404.html/');

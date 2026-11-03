@@ -6,6 +6,7 @@ type Route = Record<string, unknown>;
 
 export interface VercelConfig {
 	routes: Route[];
+	overrides: Record<string, unknown>;
 	[key: string]: unknown;
 }
 
@@ -20,13 +21,19 @@ export const NOT_FOUND_ROUTES: readonly Route[] = [
 
 /**
  * The pair adapter-static writes for 404.html, a `trailingSlash: 'never'` page. It rewrites
- * /404.html to /404.html/, which matches no file; without it, the 404.html override serves the file.
+ * /404.html to /404.html/, which matches no file.
  */
 const NOT_FOUND_PAGE_SOURCES = new Set(['/404.html', '/404.html/']);
 
 /**
- * The Build Output API config adapter-static writes, without its 404.html rules and with
- * `NOT_FOUND_ROUTES` added last. Every other rule and the overrides stay as written.
+ * The override adapter-static writes for 404.html has the file's own name as its path. With it,
+ * Vercel served the file at no path, and the Vercel CLI never writes such an override.
+ */
+const NOT_FOUND_PAGE_FILE = '404.html';
+
+/**
+ * The Build Output API config adapter-static writes, without its 404.html rules and override and
+ * with `NOT_FOUND_ROUTES` added last. Every other rule and override stays as written.
  */
 export function withNotFoundRoutes(config: VercelConfig): VercelConfig {
 	const tail = config.routes.slice(-NOT_FOUND_ROUTES.length);
@@ -40,7 +47,10 @@ export function withNotFoundRoutes(config: VercelConfig): VercelConfig {
 	const routes = config.routes.filter(
 		(route) => typeof route.src !== 'string' || !NOT_FOUND_PAGE_SOURCES.has(route.src)
 	);
-	return { ...config, routes: [...routes, ...NOT_FOUND_ROUTES] };
+	const overrides = Object.fromEntries(
+		Object.entries(config.overrides).filter(([file]) => file !== NOT_FOUND_PAGE_FILE)
+	);
+	return { ...config, routes: [...routes, ...NOT_FOUND_ROUTES], overrides };
 }
 
 const VERCEL_CONFIG = '.vercel/output/config.json';
