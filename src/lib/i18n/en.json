@@ -1,0 +1,32 @@
+{
+	"meta": {
+		"home": {
+			"title": "Falette · Minimalist wallpapers from algorithms",
+			"description": "Make minimalist wallpapers for your phone, tablet, and computer in the browser, then download PNG or SVG. Free, no account needed."
+		},
+		"create": {
+			"title": "Create · Falette",
+			"description": "Pick a device, pattern, and colors, then download your wallpaper as PNG or SVG. Everything is made in your browser."
+		}
+	},
+	"home": {
+		"heading": "Minimalist wallpapers from algorithms."
+	},
+	"create": {
+		"heading": "Create"
+	},
+	"notFound": {
+		"title": "Page not found · Falette",
+		"heading": "Page not found",
+		"message": "This address doesn't exist on Falette.",
+		"home": "Home",
+		"create": "Create"
+	},
+	"redirect": {
+		"title": "Falette"
+	},
+	"languages": {
+		"en": "English",
+		"id": "Bahasa Indonesia"
+	}
+}

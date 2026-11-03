@@ -1,0 +1,32 @@
+{
+	"meta": {
+		"home": {
+			"title": "Falette · Wallpaper minimalis dari algoritma",
+			"description": "Buat wallpaper minimalis untuk ponsel, tablet, dan komputer di browser, lalu unduh PNG atau SVG. Gratis, tanpa akun."
+		},
+		"create": {
+			"title": "Create · Falette",
+			"description": "Pilih perangkat, pola, dan warna, lalu unduh wallpaper sebagai PNG atau SVG. Semua dibuat di browser."
+		}
+	},
+	"home": {
+		"heading": "Wallpaper minimalis dari algoritma."
+	},
+	"create": {
+		"heading": "Create"
+	},
+	"notFound": {
+		"title": "Halaman tidak ditemukan · Falette",
+		"heading": "Halaman tidak ditemukan",
+		"message": "Alamat ini tidak ada di Falette.",
+		"home": "Home",
+		"create": "Create"
+	},
+	"redirect": {
+		"title": "Falette"
+	},
+	"languages": {
+		"en": "English",
+		"id": "Bahasa Indonesia"
+	}
+}
