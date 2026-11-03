@@ -4,7 +4,7 @@ Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) 
 
 **Status:** kode dan tes selesai, dan ketiga job CI hijau, termasuk Firefox dan WebKit, setelah tes EXP-07 dari Fase 1a diperbaiki dengan izin FaL ([bagian CI](#ci)).
 
-**T1 belum lulus.** Di link Preview, header `frame-ancestors` terkirim dari `vercel.json`, tetapi `/id/tidak-ada/` masih menampilkan 404 bawaan Vercel, juga setelah percobaan 2 (fase error). Percobaan 3 membuang aturan `404.html` yang ditulis adapter-static, dan hasilnya menunggu cek FaL ([bagian T1](#link-preview-vercel-t1)).
+**T1 belum lulus.** Di link Preview, header `frame-ancestors` terkirim dari `vercel.json`, tetapi `/id/tidak-ada/` masih menampilkan 404 bawaan Vercel setelah percobaan 1, 2, dan 3. Percobaan 4 membuang juga override `404.html` yang ditulis adapter-static, dan hasilnya menunggu cek ([bagian T1](#link-preview-vercel-t1)).
 
 **Koreksi:** versi laporan ini di commit `d9685bd` menulis bahwa T1 lulus, padahal FaL belum mengirim hasil cek apa pun. Aku salah membaca instruksi yang diteruskan FaL ("Cek ulang T1: 404 Falette sudah tampil dengan status 404") sebagai hasil cek. Klaim itu sudah dihapus, dan catatan cek Preview lain sekarang dikutip apa adanya dari pesan FaL.
 
@@ -26,7 +26,8 @@ Sesi 1 dari [rencana Fase 1b](../rencana.md), sesuai [rencana sesi](rencana.md) 
 | `d0cc497` | `adapter.ts`, `vite.config.ts`, `tests/adapter.test.ts` | Pembungkus adapter-static: aturan 404 di fase filesystem `.vercel/output/config.json`, dengan 4 tes unit (keputusan 2). Gagal di Preview. | Tabel rute, T1 |
 | `df7e641` | `AGENTS.md` | Baris peta folder untuk `adapter.ts` | Jawaban 3 |
 | `516fef7` | `adapter.ts`, `tests/adapter.test.ts` | Aturan 404 dipindah ke fase error, dan tes unit disesuaikan. Gagal di Preview. | Tabel rute, T1 |
-| `68d6d21` | `adapter.ts`, `tests/adapter.test.ts` | Pasangan aturan `404.html` dari adapter-static dibuang; fase error dan override `404.html` tetap. 5 tes unit. | Tabel rute, T1 |
+| `68d6d21` | `adapter.ts`, `tests/adapter.test.ts` | Pasangan aturan `404.html` dari adapter-static dibuang; fase error dan override `404.html` tetap. 5 tes unit. Gagal di Preview. | Tabel rute, T1 |
+| `8f2398b` | `adapter.ts`, `tests/adapter.test.ts` | Override `404.html` dari adapter-static ikut dibuang; pembuangan pasangan aturan dan fase error tetap. Tes unit disesuaikan. | Tabel rute, T1 |
 | Commit laporan | `laporan.md` | Laporan ini | |
 
 Yang tidak disentuh: engine, pola, kode ekspor, link berbagi, preset, snapshot ENG-08, PRD, dan katalog. Versi engine tetap 1.
@@ -72,7 +73,7 @@ Yang tidak disentuh: engine, pola, kode ekspor, link berbagi, preset, snapshot E
 
 | Perintah | Hasil |
 | --- | --- |
-| `npm run check` | 0 error, 0 peringatan (425 file) |
+| `npm run check` | 0 error, 0 peringatan (427 file) |
 | `npm run lint` | Bersih |
 | `npm test` | 661 tes unit (42 baru) dan 101 tes Playwright di Chromium (52 baru) lulus. Snapshot ENG-08 tidak berubah. |
 | `npm run build` | Berhasil, 7 halaman |
@@ -87,7 +88,7 @@ Tes baru:
 | `tests/site.e2e.ts` | 36 | Pengalih, query dan hash (P3), `lang` dan `hreflang` (P4), urutan skrip (P2), tanpa atribut `style` (T2), tema tanpa kedip, navigasi antarbahasa, dan 404 di path bertingkat (P1) |
 | `tests/budget.e2e.ts` | 2 | JS awal Home dan Create |
 | `tests/a11y.e2e.ts` | 14 | axe WCAG 2.2 AA di semua halaman, terang dan gelap |
-| `tests/adapter.test.ts` | 5 | Aturan 404 di config Vercel ([bagian T1](#percobaan-3-buang-aturan-404html-dari-adapter-static-commit-68d6d21)) |
+| `tests/adapter.test.ts` | 5 | Aturan dan override 404 di config Vercel ([bagian T1](#percobaan-4-buang-juga-override-404html-commit-8f2398b)) |
 
 Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/helpers/site.ts`).
 
@@ -113,6 +114,10 @@ Semua tes e2e halaman situs gagal bila browser mencatat pelanggaran CSP (`tests/
 | 4 | `a7e30e0` | Lulus | Lulus | Gagal: 200 dari 202 tes lulus (Firefox dan WebKit) |
 | 5 | `ec7dfdd` | Lulus | Lulus | Dibatalkan, digantikan run 6 |
 | 6 | `6316124` | Lulus | Lulus | **Lulus: 202 dari 202 tes (7,0 menit)** |
+| 7 | `e71cddc` | Lulus | Lulus | Lulus |
+| 8 | `b9d3ab2` | Lulus | Lulus | Lulus |
+| 9 | `d9685bd` | Lulus | Lulus | Lulus |
+| 10 | `e6b10d2` | Lulus | Lulus | Lulus |
 
 Workflow membatalkan run lama di branch yang sama, jadi setiap push memulai run baru. Job WebKit paling lama di `tests/export/timing.e2e.ts` (5–6 menit).
 
@@ -236,7 +241,7 @@ Dari catatan sesiku: push `b9d3ab2`, yang memuat `516fef7`, selesai pukul 19.10 
 
 > deployment yang aktif di link cabang dibuat pukul 02.26 (/_app/version.json berisi 1793474783373), jadi sudah memuat 516fef7. Di deployment itu, /404.html sendiri tidak bisa dibuka (respons 4xx). Dugaan terkuatnya: sepasang aturan yang ditulis adapter-static untuk halaman itu, { "src": "/404.html", "dest": "/404.html/" } dan { "src": "/404.html/", "status": 308, ... }. Aturan pertama mengubah /404.html menjadi /404.html/, yang tidak cocok dengan file 404.html, sehingga file itu tidak tersaji lewat aturan mana pun.
 
-Langkah cek ulang 1 di bawah menguji `/404.html` secara langsung.
+Cek `/404.html` secara langsung ada di [hasil cek percobaan 3](#hasil-cek-percobaan-3-gagal).
 
 Pasangan aturan itu memang ada di `config.json` hasil `VERCEL=1 npm run build`, bersama override `"404.html": { "path": "404.html" }`:
 
@@ -247,13 +252,13 @@ Pasangan aturan itu memang ada di `config.json` hasil `VERCEL=1 npm run build`, 
 
 Bila dugaan itu benar, percobaan 1 juga bisa gagal karena sebab yang sama: kedua percobaan menunjuk `dest: "/404.html"`.
 
-### Percobaan 3: buang aturan 404.html dari adapter-static (commit `68d6d21`)
+### Percobaan 3: buang aturan 404.html dari adapter-static (commit `68d6d21`), gagal
 
 Sesuai arahan FaL, `adapter.ts` sekarang:
 
 - tetap menutup config dengan fase error (`{ "handle": "error" }` lalu `{ "src": "/.*", "dest": "/404.html", "status": 404 }`);
 - membuang kedua aturan adapter-static yang `src`-nya `/404.html` dan `/404.html/`;
-- membiarkan override `404.html` dan semua aturan lain apa adanya, sehingga file itu tersaji langsung dari filesystem.
+- membiarkan override `404.html` dan semua aturan lain apa adanya. Harapannya file itu tersaji langsung dari filesystem, tetapi cek FaL menunjukkan file itu tidak tersaji sama sekali ([hasil cek percobaan 3](#hasil-cek-percobaan-3-gagal)).
 
 **Tes unit** (`tests/adapter.test.ts`, 5 tes):
 
@@ -280,15 +285,80 @@ Sesuai arahan FaL, `adapter.ts` sekarang:
 
 Build tanpa `VERCEL` hanya menulis `build/`, tanpa `.vercel/output`. Perilaku Vercel yang sebenarnya hanya bisa dibuktikan di Preview.
 
-### Langkah cek ulang untuk FaL setelah deploy
+### Hasil cek percobaan 3: gagal
 
-Pakai deployment Preview dari commit terakhir PR ini, yang memuat `68d6d21`. Di dashboard Vercel, deployment itu harus berstatus Ready dan menunjuk commit tersebut, karena link cabang baru pindah ke deployment baru setelah build-nya selesai. Proteksi sudah dimatikan, jadi tidak perlu login. Mohon tempel keluaran `curl` atau screenshot-nya.
+Dari FaL, dikutip apa adanya:
 
-1. Jalankan `curl.exe -sI <link Preview>/404.html`. Hasilnya harus `HTTP/1.1 200 OK` dengan `Content-Type: text/html`.
-2. Jalankan `curl.exe -sI <link Preview>/id/tidak-ada/`. Hasilnya harus `HTTP/1.1 404 Not Found` dengan `Content-Type: text/html` dan `Content-Security-Policy: frame-ancestors 'none'`, tanpa `X-Vercel-Error`.
-3. Buka `/id/tidak-ada/` di browser. Yang harus tampil adalah halaman 404 Falette, bukan 404 bawaan Vercel: "Page not found" dengan tautan Home dan Create ke `/en/…`. Bahasa Inggris tampil karena belum ada bahasa tersimpan.
-4. Opsional, untuk melihat versi Indonesia: jalankan `localStorage.setItem('falette:lang', 'id')` di konsol DevTools, lalu muat ulang. Harus tampil "Halaman tidak ditemukan" dengan tautan ke `/id/…`.
-5. Jalankan `curl.exe -sI <link Preview>/en/`. Hasilnya harus tetap `HTTP/1.1 200 OK` dengan `frame-ancestors 'none'`.
+> Hasil cek percobaan 3 (deployment dengan 68d6d21; /_app/version.json berisi 1793476859323, pukul 03.00 WIB 1 November). Bukti dari FaL, dikutip apa adanya:
+>
+> 1. Screenshot browser /id/tidak-ada/ (sekitar 21.04 WIB, 3 November): masih 404 bawaan Vercel, "This page doesn't exist", tombol "Go back", "404 NOT_FOUND", hnd1::g2pth-1793714679741-68310e8dfbea.
+> 2. curl.exe -sI \<link Preview>/404.html:
+>
+>    ```
+>    HTTP/1.1 404 Not Found
+>    Cache-Control: public, max-age=0, must-revalidate
+>    Content-Length: 79
+>    Content-Security-Policy: frame-ancestors 'none'
+>    Content-Type: text/plain; charset=utf-8
+>    X-Robots-Tag: noindex
+>    X-Vercel-Error: NOT_FOUND
+>    X-Vercel-Id: hnd1::szxd2-1793714961003-2e5e81280cd5
+>    ```
+>
+> 3. curl.exe -sI \<link Preview>/id:
+>
+>    ```
+>    HTTP/1.1 308 Permanent Redirect
+>    Content-Security-Policy: frame-ancestors 'none'
+>    Location: /id/
+>    Refresh: 0;url=/id/
+>    X-Vercel-Id: hnd1::6x5l4-1793714964785-c2fe3504b523
+>    ```
+>
+> Jadi percobaan 3 gagal, dan file 404.html tidak tersaji sama sekali. Aturan config.json memang dipakai Vercel (308 dari adapter-static).
+
+Dari catatan sesiku: push `e6b10d2`, yang memuat `68d6d21`, selesai sekitar pukul 20.00.52 UTC (31 Oktober). Angka di `version.json` itu menunjuk 20.00.59 UTC, sekitar tujuh detik kemudian.
+
+**Pengamatan tambahan dari Claude di chat,** bukan hasil cek FaL dan tanpa keluaran `curl` atau screenshot, jadi tidak dicatat sebagai hasil cek. Dikutip apa adanya:
+
+> /robots.txt dan /index.html terbuka (200), /en terbuka lewat pengalihan, tetapi /en/index.html dan /404 menjawab 4xx. Artinya, file yang punya override hanya tersaji di path override-nya. Override 404.html adalah { "path": "404.html" }, sama dengan nama filenya, dan file itu tidak tersaji di path mana pun. Override path "" untuk index.html tampaknya diabaikan, sehingga /index.html tetap terbuka. Di vercel CLI 65.10.0, writeStaticFile tidak pernah menulis override bila path sudah sama dengan nama filenya. Halaman 404 situs statis zero-config Vercel (fs-detectors) disajikan dari 404.html tanpa override, lewat { handle: "error" } lalu { status: 404, src: "^(?!/api).\*$", dest: "/404.html" }.
+
+Dua klaim kode dalam pengamatan itu kucek sendiri lewat `npm pack`, tanpa memasang paketnya:
+
+- **`vercel` 65.10.0,** `writeStaticFile` di `dist/chunks/chunk-QXL353OB.js`: `path` di override hanya diisi bila path berbeda dari nama file, yaitu bila ekstensi ditambahkan ke nama file atau bila `cleanUrls` membuang `.html`. Override yang `path`-nya sama dengan nama file tidak pernah ditulis.
+- **`@vercel/fs-detectors` 7.11.5,** `dist/detect-builders.js:1380`: bila `featHandleMiss` aktif dan situsnya bukan Next.js atau Gatsby, aturan error-nya `{ status: 404, src: "^(?!/api).*$", dest: "/404.html" }`, atau `/404` dengan `cleanUrls`. `vercel build` selalu mengaktifkan `featHandleMiss` dan memasang aturan itu di fase error lewat `appendRoutesToPhase(…, phase: "error")` (`dist/commands/build/index.js`).
+
+### Percobaan 4: buang juga override 404.html (commit `8f2398b`)
+
+Sesuai arahan FaL, `adapter.ts` sekarang:
+
+- tetap membuang kedua aturan adapter-static yang `src`-nya `/404.html` dan `/404.html/`;
+- tetap menutup config dengan fase error (`{ "handle": "error" }` lalu `{ "src": "/.*", "dest": "/404.html", "status": 404 }`);
+- membuang juga entri `"404.html"` dari `overrides`, sehingga `404.html` menjadi file statis biasa, seperti di situs statis zero-config Vercel. Override lain tetap.
+
+**Tes unit** (`tests/adapter.test.ts`, tetap 5 tes): tes kedua sekarang memastikan override `404.html` dibuang, override dan kunci lain tetap, dan tidak ada aturan dengan `src` `/404.html` atau `/404.html/`. Uji mutasi: bila override itu tidak dibuang, tes tersebut gagal.
+
+**Bukti `VERCEL=1 npm run build`:** `config.json` berisi 15 aturan, sama dengan percobaan 3. Tidak ada aturan dengan `src` `/404.html` atau `/404.html/`, `handle: filesystem` ada di indeks 11, dan `handle: error` di indeks 13, disusul aturan 404. `overrides` berisi 6 entri, tanpa `404.html`:
+
+```json
+{
+  "index.html": { "path": "" },
+  "en/index.html": { "path": "en" },
+  "id/index.html": { "path": "id" },
+  "en/create/index.html": { "path": "en/create" },
+  "id/create/index.html": { "path": "id/create" },
+  "create/index.html": { "path": "create" }
+}
+```
+
+File `.vercel/output/static/404.html` tetap tertulis (5.407 B). Perilaku Vercel yang sebenarnya hanya bisa dibuktikan di Preview.
+
+### Langkah cek ulang setelah deploy
+
+Pakai deployment Preview dari commit terakhir PR ini, yang memuat `8f2398b`. Di dashboard Vercel, deployment itu harus berstatus Ready dan menunjuk commit tersebut. Angka di `/_app/version.json` juga harus menunjuk waktu setelah push commit itu. Hasil cek hanya dicatat bila keluaran `curl` atau screenshot-nya ditempel.
+
+1. `curl.exe -sI <link Preview>/404.html` (bisa dicek Claude di chat): hasilnya harus `HTTP/1.1 200 OK` dengan `Content-Type: text/html`.
+2. `curl.exe -sI <link Preview>/id/tidak-ada/` (FaL): hasilnya harus `HTTP/1.1 404 Not Found` dengan `Content-Type: text/html`, tanpa `X-Vercel-Error`. Di browser, alamat itu harus menampilkan halaman 404 Falette ("Page not found"), bukan 404 bawaan Vercel.
 
 Bila 404 masih gagal setelah deploy ini, aku melaporkannya dulu sebelum mencoba pola lain.
 
@@ -329,7 +399,7 @@ Tangkapan dari tes lokal Playwright, bukan dari link Preview: `404.html` disajik
 
 ## Belum diuji
 
-- Perilaku 404 di Vercel dengan percobaan 3 (`68d6d21`): `/404.html` harus 200, dan `/id/tidak-ada/` harus 404 dengan halaman 404 Falette. Ini menunggu cek FaL ([langkah cek ulang](#langkah-cek-ulang-untuk-fal-setelah-deploy)). `VERCEL=1 npm run build` dan tes unit hanya membuktikan isi `config.json`: percobaan 1 dan 2 juga lolos di keduanya, tetapi gagal di Vercel.
+- Perilaku 404 di Vercel dengan percobaan 4 (`8f2398b`): `/404.html` harus 200, dan `/id/tidak-ada/` harus 404 dengan halaman 404 Falette. Ini menunggu cek ([langkah cek ulang](#langkah-cek-ulang-setelah-deploy)). `VERCEL=1 npm run build` dan tes unit hanya membuktikan isi `config.json`: percobaan 1 sampai 3 juga lolos di keduanya, tetapi gagal di Vercel.
 - Safari dan Firefox di device asli. Di CI, Firefox dan WebKit lewat Playwright lulus (run 6).
 - Device asli: pengalih bahasa di ponsel, tema yang ikut berubah saat setelan sistem berubah, dan tidak adanya kedip saat dimuat ulang.
 - Path tak dikenal di server lokal. `vite preview` dijalankan SvelteKit, jadi 404 hanya diuji dengan menyajikan `404.html` lewat `page.route`.
